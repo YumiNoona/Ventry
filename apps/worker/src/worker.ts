@@ -2,30 +2,55 @@ import * as dotenv from "dotenv";
 import path from "path";
 dotenv.config({ path: path.join(__dirname, "../../../.env") });
 
-console.log("REDIS_URL:", process.env.REDIS_URL ? "SET" : "NOT SET");
 import { Worker } from "bullmq";
-
 import { connection } from "@ventry/queue";
 import { processWebhookEvent } from "@ventry/automation";
+import { prisma } from "@ventry/db";
 
 const handleIngest = async (job: any) => {
   const { platform, payload } = job.data;
   console.log(`[Worker] Processing ingest job ${job.id} for ${platform}`);
   
-  // Real Meta Webhook Parsing
   // 1. DMs / Messaging
   if (payload.messaging && payload.messaging.length > 0) {
     for (const msg of payload.messaging) {
-      const senderId = msg.sender.id;
-      const recipientId = msg.recipient.id;
+      const senderId = msg.sender?.id;
+      const recipientId = msg.recipient?.id;
       const text = msg.message?.text;
       const mid = msg.message?.mid;
 
-      if (text && mid) {
-        // Here accountId should be looked up via recipientId
-        // For MVP, we pass recipientId as accountId if we don't have a mapping yet
-        await processWebhookEvent(recipientId, text, "messages", senderId, mid);
+      console.log("[Worker] Incoming DM:", { senderId, recipientId, mid, text });
+
+      if (!text || !mid || !recipientId) continue;
+
+      // 1.1 Idempotency check at worker level
+      const existing = await prisma.message.findUnique({
+        where: { externalId: mid }
+      });
+      if (existing) {
+        console.log(`[Worker] Duplicate message skipped: ${mid}`);
+        continue;
       }
+
+      // 1.2 Resolve Internal Account ID
+      const account = await prisma.account.findUnique({
+        where: {
+          platform_externalId: {
+            platform: "instagram",
+            externalId: recipientId,
+          },
+        },
+      });
+
+      if (!account) {
+        console.error(`[Worker] CRITICAL: No account found for recipientId: ${recipientId}`);
+        continue;
+      }
+
+      console.log(`[Worker] Account resolved: ${account.id} (${account.externalId})`);
+
+      // 1.3 Hand off to Engine with internal CUID
+      await processWebhookEvent(account.id, text, "messages", senderId, mid);
     }
   }
 
@@ -35,30 +60,55 @@ const handleIngest = async (job: any) => {
       if (change.field === "comments" && change.value?.text) {
         const commentId = change.value.id;
         const text = change.value.text;
-        const fromId = change.value.from.id;
-        // In comments, the 'id' of the account is usually the IG User node
-        const accountId = payload.id; 
+        const fromId = change.value.from?.id;
+        const recipientId = payload.id; // In comments, the root 'id' is often the IG User ID
 
-        await processWebhookEvent(accountId, text, "comments", fromId, commentId);
+        console.log("[Worker] Incoming Comment:", { fromId, recipientId, commentId, text });
+
+        if (!text || !commentId || !recipientId) continue;
+
+        // Idempotency
+        const existing = await prisma.message.findUnique({
+          where: { externalId: commentId }
+        });
+        if (existing) continue;
+
+        // Resolve Account
+        const account = await prisma.account.findUnique({
+          where: {
+             platform_externalId: { platform: "instagram", externalId: recipientId }
+          }
+        });
+
+        if (!account) {
+          console.error(`[Worker] CRITICAL: No account found for comment recipientId: ${recipientId}`);
+          continue;
+        }
+
+        await processWebhookEvent(account.id, text, "comments", fromId, commentId);
       }
     }
   }
 };
 
-
 export const startWorker = () => {
-  console.log("Starting BullMQ Workers...");
+  console.log("Starting BullMQ Workers... Listening for Ingest Jobs.");
 
   const ingestWorker = new Worker("ingestQueue", async (job) => {
-    return await handleIngest(job);
+    try {
+      return await handleIngest(job);
+    } catch (err) {
+      console.error("[Worker] Job Error:", err);
+      throw err;
+    }
   }, { connection });
 
   ingestWorker.on('completed', job => {
-    console.log(`Ingest Job ${job.id} has completed!`);
+    console.log(`[Worker] Ingest Job ${job.id} completed.`);
   });
 
   ingestWorker.on('failed', (job, err) => {
-    console.log(`Ingest Job ${job?.id} has failed with ${err.message}`);
+    console.error(`[Worker] Ingest Job ${job?.id} failed: ${err.message}`);
   });
 };
 

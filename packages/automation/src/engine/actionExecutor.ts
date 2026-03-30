@@ -96,7 +96,7 @@ export const executeAction = async (action: any, contextData: any) => {
         });
 
         const result: any = await response.json();
-        console.log("[Meta][Response]", response.status, JSON.stringify(result));
+        console.log(`[Meta][Response][${response.status}]`, JSON.stringify(result));
 
         if (response.ok) {
           // 5. Persist the outbound Message
@@ -105,7 +105,7 @@ export const executeAction = async (action: any, contextData: any) => {
               accountId: contextData.accountId,
               threadId: contextData.threadId,
               externalId: result.message_id || result.id || "ext_" + Date.now().toString(),
-              direction: "outbound", // Prisma 7 will map this string to the MessageDirection enum
+              direction: "outbound",
               content: replyText,
             },
           });
@@ -123,7 +123,18 @@ export const executeAction = async (action: any, contextData: any) => {
           return true;
         }
 
-
+        // 7. Token Health Check: If Meta says we're unauthorized, flag it
+        if (response.status === 400 || response.status === 401) {
+          console.error(`[Meta][Error] Invalid Token for account ${contextData.accountId}. Flagging for reconnection.`);
+          await prisma.account.update({
+            where: { id: contextData.accountId },
+            data: {
+              tokenValid: false,
+              lastChecked: new Date(),
+            },
+          });
+          return false; // No point in retrying on auth errors
+        }
 
         // Only retry on 5xx or 429
         if (response.status < 500 && response.status !== 429) {

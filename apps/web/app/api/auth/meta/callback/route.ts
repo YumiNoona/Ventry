@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { createClient } from "@/lib/supabase";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -50,10 +51,12 @@ export async function GET(req: NextRequest) {
     }
 
     // 4. Persistence: Connect all found Instagram Accounts
-    // For MVP, associate with the first user in the DB
-    let user = await prisma.user.findFirst();
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
     if (!user) {
-      user = await prisma.user.create({ data: { email: "owner@ventry.ai", name: "System Owner" } });
+      console.warn("[OAuth Callback] No authenticated user found.");
+      return NextResponse.redirect(`${siteUrl}/login?error=auth_required`);
     }
 
     let accountsLinkedCount = 0;

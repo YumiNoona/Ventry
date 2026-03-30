@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "start": "ts-node src/worker.ts",
-    "dev": "ts-node-dev --respawn src/worker.ts"
+    "dev": "ts-node-dev --respawn src/worker.ts",
+    "test-loop": "ts-node src/test-loop.ts"
   },
   "dependencies": {
     "@ventry/automation": "workspace:*",

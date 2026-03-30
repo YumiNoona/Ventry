@@ -57,6 +57,8 @@ model Account {
   externalId   String   @map("external_id")
   accessToken  String?  @map("access_token")
   refreshToken String?  @map("refresh_token")
+  tokenValid   Boolean  @default(true) @map("token_valid")
+  lastChecked  DateTime? @map("last_checked")
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages Message[]

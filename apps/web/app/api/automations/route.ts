@@ -1,15 +1,17 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase";
 
 export async function POST(req: Request) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const body = await req.json();
   const { name, keywords, type, useAI } = body;
-
-  // For MVP, find first user or create one
-  let user = await prisma.user.findFirst();
-  if (!user) {
-    user = await prisma.user.create({ data: { email: "owner@ventry.ai", name: "System Owner" } });
-  }
 
   const automation = await prisma.automation.create({
     data: {
