@@ -1,0 +1,14 @@
+{
+  "name": "@ventry/automation",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/index.ts",
+  "dependencies": {
+    "@ventry/db": "workspace:*",
+    "@ventry/ai": "workspace:*",
+    "@ventry/queue": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

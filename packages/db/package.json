@@ -1,0 +1,14 @@
+{
+  "name": "@ventry/db",
+  "version": "0.1.0",
+  "private": true,
+  "main": "src/client.ts",
+  "dependencies": {
+    "@prisma/client": "^5.12.1",
+    "@supabase/supabase-js": "^2.42.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.12.1",
+    "typescript": "^5.0.0"
+  }
+}

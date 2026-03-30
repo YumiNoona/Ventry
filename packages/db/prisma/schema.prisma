@@ -1,0 +1,108 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id                 String       @id @default(cuid())
+  email              String       @unique
+  name               String?
+  stripeCustomerId   String?
+  subscriptionStatus String?
+  createdAt          DateTime     @default(now())
+  
+  accounts           Account[]
+  automations        Automation[]
+}
+
+model Account {
+  id           String   @id @default(cuid())
+  userId       String
+  platform     String   // e.g., 'instagram'
+  externalId   String
+  accessToken  String?
+  refreshToken String?
+  
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages     Message[]
+  threads      Thread[]
+  posts        Post[]
+
+  @@unique([platform, externalId])
+}
+
+model Automation {
+  id        String    @id @default(cuid())
+  userId    String
+  name      String
+  isActive  Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  triggers  Trigger[]
+  actions   Action[]
+
+  @@index([userId, isActive])
+}
+
+model Trigger {
+  id           String     @id @default(cuid())
+  automationId String
+  type         String     // e.g., 'keyword_match', 'dm_received'
+  keywords     String[]   // Array of keywords
+  metadata     Json?      // Additional options
+  
+  automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+}
+
+model Action {
+  id           String     @id @default(cuid())
+  automationId String
+  type         String     // e.g., 'send_dm', 'reply_comment'
+  payload      Json?      // Data needed for the action
+  
+  automation   Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+}
+
+model Thread {
+  id               String   @id @default(cuid())
+  accountId        String
+  externalThreadId String
+  
+  account          Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  messages         Message[]
+
+  @@unique([accountId, externalThreadId])
+}
+
+model Message {
+  id         String   @id @default(cuid())
+  accountId  String
+  threadId   String?
+  externalId String
+  direction  String   // 'inbound' or 'outbound'
+  content    String
+  createdAt  DateTime @default(now())
+  
+  account    Account  @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  thread     Thread?  @relation(fields: [threadId], references: [id], onDelete: SetNull)
+
+  @@index([threadId, createdAt])
+}
+
+model Post {
+  id          String    @id @default(cuid())
+  accountId   String
+  content     String
+  mediaUrl    String?
+  scheduledAt DateTime?
+  status      String    // 'draft', 'scheduled', 'published', 'failed'
+  createdAt   DateTime  @default(now())
+  
+  account     Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
+}
