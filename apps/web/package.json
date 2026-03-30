@@ -9,21 +9,22 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@ventry/db": "workspace:*",
+    "@ventry/queue": "workspace:*",
+    "@ventry/ui": "workspace:*",
+    "lucide-react": "^0.368.0",
     "next": "14.2.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "lucide-react": "^0.368.0",
-    "@ventry/ui": "workspace:*",
-    "@ventry/db": "workspace:*",
-    "@ventry/queue": "workspace:*"
+    "stripe": "^21.0.1"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
     "@types/react": "^18.3.1",
     "@types/react-dom": "^18.3.0",
+    "autoprefixer": "^10.4.19",
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.3",
-    "typescript": "^5.0.0",
-    "autoprefixer": "^10.4.19"
+    "typescript": "^5.0.0"
   }
 }

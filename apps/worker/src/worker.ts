@@ -1,20 +1,50 @@
+import * as dotenv from "dotenv";
+import path from "path";
+dotenv.config({ path: path.join(__dirname, "../../../.env") });
+
+console.log("REDIS_URL:", process.env.REDIS_URL ? "SET" : "NOT SET");
 import { Worker } from "bullmq";
+
 import { connection } from "@ventry/queue";
 import { processWebhookEvent } from "@ventry/automation";
 
-// Helper to determine what type of ingest event it is
 const handleIngest = async (job: any) => {
   const { platform, payload } = job.data;
   console.log(`[Worker] Processing ingest job ${job.id} for ${platform}`);
   
-  // Example dummy payload parsing for Instagram
-  const accountId = "dummy-account-id"; // in real app, fetch from payload
-  const content = payload.changes?.[0]?.value?.text || "test";
-  const eventType = payload.changes?.[0]?.field || "keyword_match";
-  const threadId = "dummy-thread-id";
+  // Real Meta Webhook Parsing
+  // 1. DMs / Messaging
+  if (payload.messaging && payload.messaging.length > 0) {
+    for (const msg of payload.messaging) {
+      const senderId = msg.sender.id;
+      const recipientId = msg.recipient.id;
+      const text = msg.message?.text;
+      const mid = msg.message?.mid;
 
-  await processWebhookEvent(accountId, content, eventType, threadId);
+      if (text && mid) {
+        // Here accountId should be looked up via recipientId
+        // For MVP, we pass recipientId as accountId if we don't have a mapping yet
+        await processWebhookEvent(recipientId, text, "messages", senderId, mid);
+      }
+    }
+  }
+
+  // 2. Comments / Feed Changes
+  if (payload.changes && payload.changes.length > 0) {
+    for (const change of payload.changes) {
+      if (change.field === "comments" && change.value?.text) {
+        const commentId = change.value.id;
+        const text = change.value.text;
+        const fromId = change.value.from.id;
+        // In comments, the 'id' of the account is usually the IG User node
+        const accountId = payload.id; 
+
+        await processWebhookEvent(accountId, text, "comments", fromId, commentId);
+      }
+    }
+  }
 };
+
 
 export const startWorker = () => {
   console.log("Starting BullMQ Workers...");

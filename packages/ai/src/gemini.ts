@@ -1,21 +1,21 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const apiKey = process.env.GEMINI_API_KEY || "";
 
-// Suppress init if no key is present during build time
-export const ai = new GoogleGenAI(apiKey ? { apiKey } : {});
+// Initialize if key is present
+export const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 export const generateWithGemini = async (prompt: string, systemInstruction?: string) => {
-  if (!apiKey) throw new Error("GEMINI_API_KEY is not set.");
+  if (!genAI) throw new Error("GEMINI_API_KEY is not set.");
   
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: prompt,
-    config: {
-      systemInstruction: systemInstruction,
-      temperature: 0.7,
-    }
+  // Using 1.5 Flash as requested for high-speed generation
+  const model = genAI.getGenerativeModel({ 
+    model: "gemini-1.5-flash",
+    systemInstruction: systemInstruction 
   });
 
-  return response.text;
+  const result = await model.generateContent(prompt);
+  const response = await result.response;
+  return response.text();
 };
+

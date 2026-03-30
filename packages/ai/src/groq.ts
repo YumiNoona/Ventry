@@ -15,7 +15,7 @@ export const generateWithGroq = async (prompt: string, systemInstruction?: strin
 
   const completion = await groq.chat.completions.create({
     messages,
-    model: "llama3-8b-8192", // Fast open source model on Groq
+    model: "llama-3.3-70b-versatile", // High performance Llama 3.3 model on Groq
     temperature: 0.7,
   });
 

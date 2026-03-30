@@ -6,17 +6,20 @@ import { Redis } from "ioredis";
 // to use QStash or retrieve the TCP rediss:// URL from the Upstash console.
 // We fall back to standard local redis for dev if not provided.
 
-const redisUrl = process.env.REDIS_URL || process.env.UPSTASH_REDIS_REST_URL;
+const redisUrl = process.env.REDIS_URL;
+
+if (!redisUrl) {
+  throw new Error("[Queue] CRITICAL: REDIS_URL environment variable is required.");
+}
 
 // Parse the URL to see if it requires TLS (Upstash requires this)
-const isTls = redisUrl?.startsWith("rediss://") || redisUrl?.includes("upstash.io");
+const isTls = redisUrl.startsWith("rediss://") || redisUrl.includes("upstash.io");
 
-const connection = redisUrl 
-  ? new Redis(redisUrl, { 
-      maxRetriesPerRequest: null,
-      ...(isTls ? { tls: { rejectUnauthorized: false } } : {}) // Mandatory for Upstash
-    })
-  : new Redis({ host: '127.0.0.1', port: 6379, maxRetriesPerRequest: null });
+const connection = new Redis(redisUrl, {
+  maxRetriesPerRequest: null,
+  ...(isTls ? { tls: { rejectUnauthorized: false } } : {}) // Mandatory for Upstash
+});
+
 
 // Core Queues for Ventry
 export const replyQueue = new Queue("replyQueue", { connection });
