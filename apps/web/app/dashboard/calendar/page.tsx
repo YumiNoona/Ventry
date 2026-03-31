@@ -1,8 +1,9 @@
 import { requireUser } from "@/lib/getUser";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@ventry/ui/components/ui/button";
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Clock, Instagram } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, Clock, Instagram, CheckCircle2 } from "lucide-react";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, addMonths, subMonths } from "date-fns";
+import Link from "next/link";
 
 export default async function CalendarPage() {
   const { dbUser } = await requireUser();
@@ -12,13 +13,15 @@ export default async function CalendarPage() {
   const days = eachDayOfInterval({ start, end });
 
   // Get scheduled posts for the current month
-  const posts = await prisma.post.findMany({
+  const data = await prisma.post.findMany({
     where: { 
       account: { userId: dbUser?.id },
       scheduledAt: { gte: start, lte: end }
     },
     include: { account: true }
   });
+
+  type PostWithAccount = typeof data[number];
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -63,14 +66,14 @@ export default async function CalendarPage() {
 
         {/* Month Grid */}
         <div className="grid grid-cols-7 border-b border-border bg-muted/20">
-           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+           {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day: string) => (
              <div key={day} className="p-3 text-center text-[10px] uppercase font-bold text-muted-foreground tracking-widest">{day}</div>
            ))}
         </div>
         
         <div className="grid grid-cols-7 min-h-[600px]">
-           {days.map((day, i) => {
-              const dayPosts = posts.filter(p => p.scheduledAt && isSameDay(p.scheduledAt, day));
+           {days.map((day: Date, i: number) => {
+              const dayPosts = data.filter((p: PostWithAccount) => p.scheduledAt && isSameDay(p.scheduledAt, day));
               const isToday = isSameDay(day, today);
               
               return (
@@ -83,7 +86,7 @@ export default async function CalendarPage() {
                    </div>
                    
                    <div className="space-y-1">
-                      {dayPosts.map((post, pi) => (
+                      {dayPosts.map((post: PostWithAccount, pi: number) => (
                         <div key={pi} className={`px-2 py-1.5 rounded-md text-[9px] font-bold border truncate flex items-center gap-1.5 ${post.status === 'published' ? 'bg-success/5 border-success/20 text-success' : 'bg-primary/5 border-primary/20 text-primary'}`}>
                            {post.status === 'published' ? <CheckCircle2 className="size-2.5" /> : <Clock className="size-2.5" />}
                            {post.content.slice(0, 15)}...

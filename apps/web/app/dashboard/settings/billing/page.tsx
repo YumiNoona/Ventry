@@ -5,13 +5,18 @@ import { CheckCircle2, Zap, CreditCard, Shield } from "lucide-react";
 import Link from "next/link";
 
 export default async function BillingPage() {
-  const { dbUser } = await requireUser();
+  const { authUser } = await requireUser();
+  
+  const [data, dbUserWithPlan] = await Promise.all([
+    prisma.plan.findMany({ orderBy: { price: "asc" } }),
+    prisma.user.findUnique({
+      where: { id: authUser.id },
+      include: { plan: true }
+    })
+  ]);
 
-  const plans = await prisma.plan.findMany({
-    orderBy: { price: "asc" }
-  });
-
-  const currentPlan = dbUser?.plan || { name: "Free", messageLimit: 50 };
+  type Plan = typeof data[number];
+  const currentPlan = dbUserWithPlan?.plan || { name: "Free", messageLimit: 50 };
 
   return (
     <div className="max-w-5xl space-y-8 animate-fade-in">
@@ -42,8 +47,8 @@ export default async function BillingPage() {
       </div>
 
       <div className="grid gap-8 md:grid-cols-3 pt-4">
-        {plans.map((plan) => {
-          const isCurrent = dbUser?.planId === plan.id || (plan.name === "Free" && !dbUser?.planId);
+        {data.map((plan: Plan) => {
+          const isCurrent = dbUserWithPlan?.planId === plan.id || (plan.name === "Free" && !dbUserWithPlan?.planId);
           
           return (
             <div key={plan.id} className={`flex flex-col p-6 rounded-2xl border transition-all ${isCurrent ? 'border-primary ring-1 ring-primary bg-primary/5 shadow-lg' : 'border-border bg-card'}`}>

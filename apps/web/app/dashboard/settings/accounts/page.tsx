@@ -7,10 +7,12 @@ import Link from "next/link";
 export default async function AccountsPage() {
   const { dbUser } = await requireUser();
 
-  const accounts = await prisma.account.findMany({
+  const data = await prisma.account.findMany({
     where: { userId: dbUser?.id },
     orderBy: { createdAt: "desc" },
   });
+
+  type Account = typeof data[number];
 
   return (
     <div className="space-y-8">
@@ -39,14 +41,14 @@ export default async function AccountsPage() {
 
         {/* Account List */}
         <div className="grid gap-4">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Active Connections ({accounts.length})</h2>
+          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">Active Connections ({data.length})</h2>
           
-          {accounts.length === 0 ? (
+          {data.length === 0 ? (
             <div className="rounded-xl border bg-card p-12 text-center text-muted-foreground">
               No accounts connected yet.
             </div>
           ) : (
-            accounts.map((account) => (
+            data.map((account: Account) => (
               <div key={account.id} className="rounded-xl border bg-card p-6 shadow-sm flex items-center justify-between">
                 <div className="flex items-center gap-4 text-sm font-medium">
                   <div className="size-12 rounded-full bg-muted flex items-center justify-center text-xl font-bold">

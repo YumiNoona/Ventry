@@ -7,15 +7,18 @@ export default async function InboxPage() {
   const { dbUser } = await requireUser();
 
   // Get all messages for the current user's accounts, grouped by threadId
-  const messages = await prisma.message.findMany({
+  const data = await prisma.message.findMany({
     where: { account: { userId: dbUser?.id } },
     include: { account: true, thread: true },
     orderBy: { createdAt: "desc" },
   });
 
+  type MessageWithAccount = typeof data[number];
+
   // Simple thread grouping logic for the UI
-  const threadsMap = new Map();
-  messages.forEach((msg) => {
+  const threadsMap = new Map<string, { id: string, lastMessage: MessageWithAccount, messages: MessageWithAccount[], account: any }>();
+  
+  data.forEach((msg: MessageWithAccount) => {
     const threadKey = msg.threadId || msg.id; // fallback to message id if no thread
     if (!threadsMap.has(threadKey)) {
       threadsMap.set(threadKey, {
@@ -25,10 +28,11 @@ export default async function InboxPage() {
         account: msg.account,
       });
     }
-    threadsMap.get(threadKey).messages.push(msg);
+    threadsMap.get(threadKey)!.messages.push(msg);
   });
 
   const threads = Array.from(threadsMap.values());
+  type Thread = typeof threads[number];
 
   return (
     <div className="h-[calc(100vh-160px)] flex rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
@@ -56,7 +60,7 @@ export default async function InboxPage() {
               <p className="text-xs mt-1 opacity-60">Messages will appear once automations process incoming DMs.</p>
             </div>
           ) : (
-            threads.map((thread) => (
+            threads.map((thread: Thread) => (
               <div key={thread.id} className="p-4 border-b border-border hover:bg-muted/50 cursor-pointer group transition-all duration-200 relative">
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary opacity-0 group-hover:opacity-100 transition-opacity rounded-r"></div>
                 <div className="flex items-start gap-3">
@@ -120,7 +124,7 @@ export default async function InboxPage() {
 
             {/* Messages Display */}
             <div className="flex-1 overflow-y-auto p-8 space-y-6 bg-muted/5">
-              {threads[0].messages.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()).map((msg: any) => (
+              {threads[0].messages.sort((a: MessageWithAccount, b: MessageWithAccount) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()).map((msg: MessageWithAccount) => (
                 <div key={msg.id} className={`flex flex-col ${msg.direction === 'outbound' ? 'items-end' : 'items-start'} animate-fade-in`}>
                    <div className="flex items-center gap-2 mb-1.5 px-1">
                       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
