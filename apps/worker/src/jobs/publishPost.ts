@@ -8,18 +8,63 @@ export const startPostWorker = () => {
     const { postId } = job.data;
     console.log(`[Worker] Publishing post ${postId}`);
     
-    // 1. Fetch post and connection details
     const post = await prisma.post.findUnique({ where: { id: postId }, include: { account: true }});
     if (!post) throw new Error("Post not found");
 
-    // 2. Call Instagram API
     console.log(`Uploading to Instagram... ${post.content}`);
     
-    // 3. Mark published
     await prisma.post.update({
       where: { id: postId },
       data: { status: 'published' }
     });
 
   }, { connection });
+
+  postWorker.on('completed', async (job) => {
+    try {
+      const isRetry = job.attemptsMade > 0;
+      const shouldLog = isRetry || Math.random() < 0.1;
+
+      if (shouldLog) {
+        let durationMs = null;
+        if (job.processedOn && job.finishedOn) {
+          durationMs = job.finishedOn - job.processedOn;
+        }
+
+        await prisma.workerLog.create({
+          data: {
+            jobId: job.id || "unknown",
+            queueName: "postQueue",
+            status: isRetry ? "RETRY" : "COMPLETED",
+            attempts: job.attemptsMade,
+            durationMs,
+          }
+        });
+      }
+    } catch (e) {
+      console.error("[WorkerLog] Failed to log post completion:", e);
+    }
+  });
+
+  postWorker.on('failed', async (job, err) => {
+    try {
+      let durationMs = null;
+      if (job?.processedOn && job?.finishedOn) {
+        durationMs = job.finishedOn - job.processedOn;
+      }
+
+      await prisma.workerLog.create({
+        data: {
+          jobId: job?.id || "unknown",
+          queueName: "postQueue",
+          status: "FAILED",
+          attempts: job?.attemptsMade || 0,
+          durationMs,
+          error: err.message,
+        }
+      });
+    } catch (e) {
+       console.error("[WorkerLog] Failed to log post failure:", e);
+    }
+  });
 };

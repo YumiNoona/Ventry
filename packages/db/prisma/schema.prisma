@@ -34,6 +34,7 @@ model User {
   plan        Plan?        @relation(fields: [planId], references: [id])
   accounts    Account[]
   automations Automation[]
+  notifications Notification[]
 
   @@map("user")
 }
@@ -54,11 +55,13 @@ model Account {
   id           String   @id @default(cuid())
   userId       String   @map("user_id")
   platform     String
+  name         String?
   externalId   String   @map("external_id")
   accessToken  String?  @map("access_token")
   refreshToken String?  @map("refresh_token")
   tokenValid   Boolean  @default(true) @map("token_valid")
   lastChecked  DateTime? @map("last_checked")
+  createdAt    DateTime @default(now()) @map("created_at")
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   messages Message[]
@@ -119,6 +122,7 @@ model Thread {
   id               String   @id @default(cuid())
   accountId        String   @map("account_id")
   externalThreadId String   @map("external_thread_id")
+  createdAt        DateTime @default(now()) @map("created_at")
 
   account  Account   @relation(fields: [accountId], references: [id], onDelete: Cascade)
   messages Message[]
@@ -132,17 +136,17 @@ model Thread {
 model Message {
   id           String           @id @default(cuid())
   accountId    String           @map("account_id")
-  threadId     String?          @map("thread_id")
+  threadId     String           @map("thread_id")
   externalId   String           @unique @map("external_id")
   direction    MessageDirection
   content      String
   createdAt    DateTime         @default(now()) @map("created_at")
 
   account Account @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  thread  Thread? @relation(fields: [threadId], references: [id], onDelete: SetNull)
+  thread  Thread  @relation(fields: [threadId], references: [id], onDelete: Cascade)
+  automationExecutions AutomationExecution[]
 
   @@index([threadId, createdAt])
-  @@index([externalId])
   @@map("message")
 }
 
@@ -170,8 +174,54 @@ model AutomationExecution {
   createdAt    DateTime @default(now()) @map("created_at")
 
   automation Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  message    Message?   @relation(fields: [messageId], references: [id], onDelete: SetNull)
 
   @@index([automationId])
   @@map("automation_execution")
+}
+
+enum WorkerStatus {
+  COMPLETED
+  FAILED
+  RETRY
+
+  @@map("worker_status")
+}
+
+model WorkerLog {
+  id         String       @id @default(cuid())
+  jobId      String       @map("job_id")
+  queueName  String       @map("queue_name")
+  status     WorkerStatus
+  error      String?
+  attempts   Int          @default(0)
+  durationMs Int?         @map("duration_ms")
+  createdAt  DateTime     @default(now()) @map("created_at")
+
+  @@index([jobId])
+  @@index([createdAt])
+  @@map("worker_log")
+}
+
+enum NotificationType {
+  TOKEN_INVALID
+  SYSTEM_ERROR
+  USAGE_LIMIT
+
+  @@map("notification_type")
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  userId    String           @map("user_id")
+  type      NotificationType
+  message   String
+  isRead    Boolean          @default(false) @map("is_read")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notification")
 }
 

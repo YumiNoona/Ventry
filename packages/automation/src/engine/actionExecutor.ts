@@ -1,4 +1,4 @@
-import { prisma } from "@ventry/db";
+import { prisma, decryptToken } from "@ventry/db";
 import { generateContent } from "@ventry/ai";
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -17,6 +17,12 @@ export const executeAction = async (action: any, contextData: any) => {
 
     if (!account || !account.accessToken) {
       console.error(`[ActionExecutor] No access token found for account: ${contextData.accountId}`);
+      return false;
+    }
+
+    const decryptedAccessToken = decryptToken(account.accessToken);
+    if (!decryptedAccessToken) {
+      console.error(`[ActionExecutor] Failed to decrypt access token for account: ${contextData.accountId}`);
       return false;
     }
 
@@ -70,14 +76,14 @@ export const executeAction = async (action: any, contextData: any) => {
       body = {
         recipient: { id: contextData.senderId || contextData.threadId },
         message: { text: replyText },
-        access_token: account.accessToken,
+        access_token: decryptedAccessToken,
       };
     } else if (action.type === "reply_comment") {
       const commentId = contextData.externalId;
       endpoint = `https://graph.facebook.com/v19.0/${commentId}/replies`;
       body = {
         message: replyText,
-        access_token: account.accessToken,
+        access_token: decryptedAccessToken,
       };
     }
 
@@ -99,7 +105,7 @@ export const executeAction = async (action: any, contextData: any) => {
         console.log(`[Meta][Response][${response.status}]`, JSON.stringify(result));
 
         if (response.ok) {
-          // 5. Persist the outbound Message
+          // ... (existing success logic)
           const message = await prisma.message.create({
             data: {
               accountId: contextData.accountId,
@@ -110,7 +116,6 @@ export const executeAction = async (action: any, contextData: any) => {
             },
           });
 
-          // 6. Audit Log: Trace high-level execution
           if (contextData.automationId) {
             await prisma.automationExecution.create({
               data: {
@@ -123,9 +128,18 @@ export const executeAction = async (action: any, contextData: any) => {
           return true;
         }
 
-        // 7. Token Health Check: If Meta says we're unauthorized, flag it
-        if (response.status === 400 || response.status === 401) {
-          console.error(`[Meta][Error] Invalid Token for account ${contextData.accountId}. Flagging for reconnection.`);
+        // 7. Token Health & Retry Classification
+        const error = result.error;
+        const errorCode = error?.code;
+        const errorSubcode = error?.error_subcode;
+
+        // Code 190 is explicitly an Access Token error
+        // Subcodes: 458 (App deauthorized), 463 (Expired)
+        const isAuthError = errorCode === 190 || [458, 463].includes(errorSubcode);
+
+        if (isAuthError) {
+          console.error(`[Meta][Error] Terminal Token Error for account ${contextData.accountId}. Code: ${errorCode}, Subcode: ${errorSubcode}`);
+          
           await prisma.account.update({
             where: { id: contextData.accountId },
             data: {
@@ -133,12 +147,39 @@ export const executeAction = async (action: any, contextData: any) => {
               lastChecked: new Date(),
             },
           });
-          return false; // No point in retrying on auth errors
+
+          // Deduplicated Notification: Only create if no unread TOKEN_INVALID exists
+          const existingNotification = await prisma.notification.findFirst({
+            where: {
+              userId: account.userId,
+              type: "TOKEN_INVALID",
+              isRead: false,
+            }
+          });
+
+          if (!existingNotification) {
+            await prisma.notification.create({
+              data: {
+                userId: account.userId,
+                type: "TOKEN_INVALID",
+                message: "Instagram connection expired. Please reconnect.",
+              }
+            });
+          }
+
+          return false;
         }
 
-        // Only retry on 5xx or 429
+        // 8. Retry Signaling: Codes 4/17 are rate limits
+        if (errorCode === 4 || errorCode === 17) {
+          console.warn(`[Meta][Retry] Rate limit encountered. Code: ${errorCode}. Throwing for BullMQ retry.`);
+          throw new Error("RATE_LIMIT");
+        }
+
+        // If it's a 400/401 but NOT a terminal auth error, it might be a temporary platform issue or specific API error
+        // We should allow it to retry if it's 5xx/429 or log it as non-retryable if it's a permanent bad request (e.g. invalid recipient)
         if (response.status < 500 && response.status !== 429) {
-          console.error("[Meta][Error] Non-retryable status:", response.status);
+          console.error(`[Meta][Error] Non-retryable error [${response.status}]:`, JSON.stringify(result));
           return false;
         }
 

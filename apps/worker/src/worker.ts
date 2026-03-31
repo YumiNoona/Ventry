@@ -103,12 +103,55 @@ export const startWorker = () => {
     }
   }, { connection });
 
-  ingestWorker.on('completed', job => {
-    console.log(`[Worker] Ingest Job ${job.id} completed.`);
+  ingestWorker.on('completed', async (job) => {
+    try {
+      // Scale Strategy: Log only if it was a retry OR a 10% sample of successes
+      const isRetry = job.attemptsMade > 0;
+      const shouldLog = isRetry || Math.random() < 0.1;
+
+      if (shouldLog) {
+        let durationMs = null;
+        if (job.processedOn && job.finishedOn) {
+          durationMs = job.finishedOn - job.processedOn;
+        }
+
+        await prisma.workerLog.create({
+          data: {
+            jobId: job.id || "unknown",
+            queueName: "ingestQueue",
+            status: isRetry ? "RETRY" : "COMPLETED",
+            attempts: job.attemptsMade,
+            durationMs,
+          }
+        });
+      }
+      console.log(`[Worker] Ingest Job ${job.id} completed.`);
+    } catch (e) {
+      console.error("[WorkerLog] Failed to log completion:", e);
+    }
   });
 
-  ingestWorker.on('failed', (job, err) => {
-    console.error(`[Worker] Ingest Job ${job?.id} failed: ${err.message}`);
+  ingestWorker.on('failed', async (job, err) => {
+    try {
+      let durationMs = null;
+      if (job?.processedOn && job?.finishedOn) {
+        durationMs = job.finishedOn - job.processedOn;
+      }
+
+      await prisma.workerLog.create({
+        data: {
+          jobId: job?.id || "unknown",
+          queueName: "ingestQueue",
+          status: "FAILED",
+          attempts: job?.attemptsMade || 0,
+          durationMs,
+          error: err.message,
+        }
+      });
+      console.error(`[Worker] Ingest Job ${job?.id} failed: ${err.message}`);
+    } catch (e) {
+      console.error("[WorkerLog] Failed to log failure:", e);
+    }
   });
 };
 

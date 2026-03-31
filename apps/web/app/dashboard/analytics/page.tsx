@@ -1,7 +1,5 @@
 "use client";
 
-import { requireUser } from "@/lib/getUser";
-import { prisma } from "@/lib/prisma";
 import { 
   LineChart, 
   Line, 

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@/lib/supabase";
 
+import { encryptToken } from "@ventry/db";
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -65,15 +67,16 @@ export async function GET(req: NextRequest) {
       if (page.instagram_business_account) {
         const igAccountId = page.instagram_business_account.id;
         const pageToken = page.access_token; // This is a Long-Lived Page Token
+        const encryptedPageToken = encryptToken(pageToken);
 
         await prisma.account.upsert({
           where: { platform_externalId: { platform: "instagram", externalId: igAccountId } },
-          update: { accessToken: pageToken },
+          update: { accessToken: encryptedPageToken },
           create: {
             userId: user.id,
             platform: "instagram",
             externalId: igAccountId,
-            accessToken: pageToken,
+            accessToken: encryptedPageToken,
           },
         });
         accountsLinkedCount++;

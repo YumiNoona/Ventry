@@ -9,22 +9,23 @@ export default async function InboxPage() {
   // Get all messages for the current user's accounts, grouped by threadId
   const messages = await prisma.message.findMany({
     where: { account: { userId: dbUser?.id } },
-    include: { account: true, automation: true },
+    include: { account: true, thread: true },
     orderBy: { createdAt: "desc" },
   });
 
   // Simple thread grouping logic for the UI
   const threadsMap = new Map();
   messages.forEach((msg) => {
-    if (!threadsMap.has(msg.threadId)) {
-      threadsMap.set(msg.threadId, {
-        id: msg.threadId,
+    const threadKey = msg.threadId || msg.id; // fallback to message id if no thread
+    if (!threadsMap.has(threadKey)) {
+      threadsMap.set(threadKey, {
+        id: threadKey,
         lastMessage: msg,
         messages: [],
         account: msg.account,
       });
     }
-    threadsMap.get(msg.threadId).messages.push(msg);
+    threadsMap.get(threadKey).messages.push(msg);
   });
 
   const threads = Array.from(threadsMap.values());
@@ -37,13 +38,13 @@ export default async function InboxPage() {
           <div className="flex items-center justify-between">
             <h2 className="font-bold text-lg">Inbox</h2>
             <div className="flex gap-2">
-              <button className="p-1.5 rounded-md hover:bg-muted text-muted-foreground"><Search className="h-4 w-4" /></button>
-              <button className="p-1.5 rounded-md hover:bg-muted text-muted-foreground"><Filter className="h-4 w-4" /></button>
+              <button className="p-1.5 rounded-md hover:bg-muted text-muted-foreground transition-colors active:scale-95"><Search className="h-4 w-4" /></button>
+              <button className="p-1.5 rounded-md hover:bg-muted text-muted-foreground transition-colors active:scale-95"><Filter className="h-4 w-4" /></button>
             </div>
           </div>
           <div className="flex gap-2">
-             <div className="flex-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-tighter flex items-center justify-center py-1">All Threads</div>
-             <div className="flex-1 rounded-full bg-muted text-muted-foreground text-[10px] font-bold uppercase tracking-tighter flex items-center justify-center py-1">Unread</div>
+             <div className="flex-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-tighter flex items-center justify-center py-1 cursor-pointer transition-colors hover:bg-primary/20">All Threads</div>
+             <div className="flex-1 rounded-full bg-muted text-muted-foreground text-[10px] font-bold uppercase tracking-tighter flex items-center justify-center py-1 cursor-pointer transition-colors hover:bg-muted/80">Unread</div>
           </div>
         </div>
         
@@ -52,14 +53,15 @@ export default async function InboxPage() {
             <div className="p-8 text-center text-muted-foreground">
               <MessageSquare className="h-8 w-8 mx-auto mb-4 opacity-20" />
               <p className="text-sm">No conversations yet.</p>
+              <p className="text-xs mt-1 opacity-60">Messages will appear once automations process incoming DMs.</p>
             </div>
           ) : (
             threads.map((thread) => (
-              <div key={thread.id} className="p-4 border-b border-border hover:bg-muted/50 cursor-pointer group transition-colors relative">
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary opacity-0 group-hover:opacity-100 transition-opacity"></div>
+              <div key={thread.id} className="p-4 border-b border-border hover:bg-muted/50 cursor-pointer group transition-all duration-200 relative">
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary opacity-0 group-hover:opacity-100 transition-opacity rounded-r"></div>
                 <div className="flex items-start gap-3">
-                  <div className="size-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-                    <User className="h-5 w-5 text-muted-foreground" />
+                  <div className="size-10 rounded-full bg-muted flex items-center justify-center flex-shrink-0 transition-colors group-hover:bg-primary/10">
+                    <User className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-primary" />
                   </div>
                   <div className="flex-1 min-w-0 space-y-1">
                     <div className="flex items-center justify-between">
@@ -73,7 +75,7 @@ export default async function InboxPage() {
                       <div className="size-3 rounded-full bg-primary/20 flex items-center justify-center">
                          <div className="size-1 rounded-full bg-primary"></div>
                       </div>
-                      <span className="text-[10px] font-bold uppercase tracking-widest opacity-50">{thread.account.name}</span>
+                      <span className="text-[10px] font-bold uppercase tracking-widest opacity-50">Instagram</span>
                     </div>
                   </div>
                 </div>
@@ -100,12 +102,12 @@ export default async function InboxPage() {
         ) : (
           <>
             {/* Thread Header */}
-            <div className="h-16 border-b border-border px-6 flex items-center justify-between bg-card/30">
+            <div className="h-16 border-b border-border px-6 flex items-center justify-between bg-card/30 backdrop-blur-sm">
                <div className="flex items-center gap-3">
                   <div className="size-8 rounded-full bg-muted flex items-center justify-center"><User className="h-4 w-4" /></div>
                   <div>
-                    <h3 className="text-sm font-bold">Thread ID: {threads[0].id}</h3>
-                    <p className="text-[10px] uppercase font-bold tracking-widest text-success opacity-80">Connected to {threads[0].account.name}</p>
+                    <h3 className="text-sm font-bold">Thread: {threads[0].id.slice(-6)}</h3>
+                    <p className="text-[10px] uppercase font-bold tracking-widest text-success opacity-80">Connected via Instagram</p>
                   </div>
                </div>
                <div className="flex gap-4">
@@ -124,11 +126,6 @@ export default async function InboxPage() {
                       <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                         {msg.direction === 'outbound' ? 'Ventry AI' : 'Customer'}
                       </span>
-                      {msg.automationId && (
-                        <span className="text-[10px] font-bold uppercase tracking-widest px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
-                          {msg.automation.name}
-                        </span>
-                      )}
                    </div>
                    <div className={`max-w-md p-4 rounded-2xl text-sm leading-relaxed ${
                      msg.direction === 'outbound' 
@@ -149,7 +146,7 @@ export default async function InboxPage() {
                <div className="p-4 rounded-xl bg-muted/30 border border-dashed border-border text-center">
                   <p className="text-xs text-muted-foreground font-medium flex items-center justify-center gap-2">
                     <Bot className="h-3 w-3" />
-                    This conversation is being handled by the <span className="text-primary font-bold">{threads[0].messages.find((m: any) => m.automationId)?.automation?.name || "AI Engine"}</span>
+                    This conversation is being handled by the <span className="text-primary font-bold">AI Engine</span>
                   </p>
                </div>
             </div>
