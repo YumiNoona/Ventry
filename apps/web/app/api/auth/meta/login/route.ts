@@ -14,8 +14,6 @@ export async function GET(req: NextRequest) {
   // Scopes required for Ventry functionality
   const scopes = [
     "instagram_basic",
-    "instagram_manage_messages",
-    "instagram_manage_comments",
     "pages_show_list",
     "pages_read_engagement"
   ].join(",");
