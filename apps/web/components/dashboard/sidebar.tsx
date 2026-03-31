@@ -22,7 +22,7 @@ const navItems = [
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
-export function Sidebar({ user }: { user: any }) {
+export function Sidebar({ user }: { user: { name: string | null; email: string } | null }) {
   const pathname = usePathname();
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -47,7 +47,7 @@ export function Sidebar({ user }: { user: any }) {
           </Link>
         </div>
         <nav className="p-3 space-y-0.5">
-          {navItems.map((item) => {
+          {navItems.map((item: typeof navItems[number]) => {
             const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`));
             const isDashboardExact = item.href === "/dashboard" && pathname === "/dashboard";
             const active = isActive || isDashboardExact;

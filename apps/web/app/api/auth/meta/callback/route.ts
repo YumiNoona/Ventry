@@ -6,7 +6,7 @@ import { encryptToken } from "@ventry/db";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const siteUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
   try {
     const code = searchParams.get("code");

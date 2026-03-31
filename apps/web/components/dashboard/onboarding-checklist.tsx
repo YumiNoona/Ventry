@@ -35,7 +35,7 @@ export function OnboardingChecklist({
     },
   ];
 
-  const completedCount = steps.filter(s => s.done).length;
+  const completedCount = steps.filter((step: { title: string; description: string; icon: any; done: boolean; href: string; }) => step.done).length;
   const isComplete = completedCount === steps.length;
 
   if (isComplete) return null;
@@ -66,7 +66,7 @@ export function OnboardingChecklist({
         </div>
 
         <div className="grid gap-4 md:grid-cols-3 stagger-children">
-          {steps.map((step, i) => (
+          {steps.map((step: { title: string; description: string; icon: any; done: boolean; href: string; }, i: number) => (
             <div key={i} className={`p-5 rounded-xl border bg-card transition-all duration-300 ${step.done ? 'opacity-60 grayscale' : 'shadow-sm card-hover'}`}>
                <div className="flex items-center justify-between mb-4">
                   <div className={`p-2.5 rounded-lg transition-colors duration-200 ${step.done ? 'bg-success/10 text-success' : 'bg-primary/10 text-primary'}`}>

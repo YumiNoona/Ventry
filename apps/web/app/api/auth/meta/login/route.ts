@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function GET(req: NextRequest) {
   const appId = process.env.INSTAGRAM_APP_ID;
-  const redirectUri = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/auth/meta/callback`;
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const redirectUri = `${baseUrl}/api/auth/meta/callback`;
   
   // Scopes required for Ventry functionality
   const scopes = [

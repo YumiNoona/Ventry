@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import { replyQueue, postQueue, ingestQueue } from "@ventry/queue";
 import { requireUser } from "@/lib/getUser";

@@ -20,7 +20,7 @@ export async function POST(req: Request) {
       isActive: true,
       triggers: {
         create: {
-          type: "messages",
+          type: "DM",
           keywords,
         }
       },

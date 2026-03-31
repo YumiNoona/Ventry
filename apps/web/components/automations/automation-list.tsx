@@ -9,7 +9,7 @@ export function AutomationList({ initialData }: { initialData: any[] }) {
 
   const toggleStatus = async (id: string, current: boolean) => {
     // Optimistic UI
-    setAutomations(prev => prev.map(a => 
+    setAutomations(prev => prev.map((a: any) => 
       a.id === id ? { ...a, isActive: !current } : a
     ));
 
@@ -23,7 +23,7 @@ export function AutomationList({ initialData }: { initialData: any[] }) {
 
   return (
     <div className="grid gap-4">
-      {automations.map((a) => (
+      {automations.map((a: any) => (
         <div key={a.id} className="p-6 border rounded-xl bg-card flex justify-between items-center shadow-sm hover:shadow-md transition-shadow">
           <div className="space-y-3">
             <div className="flex items-center gap-3">
