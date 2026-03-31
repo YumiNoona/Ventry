@@ -56,7 +56,7 @@ export default async function AutomationsPage() {
           </div>
         ) : (
           <div className="grid gap-6 md:grid-cols-2">
-            {automations.map((automation) => (
+            {automations.map((automation: AutomationWithTriggers & { keywords: string[] }) => (
               <AutomationCard key={automation.id} automation={automation} />
             ))}
           </div>
