@@ -17,7 +17,9 @@ export default async function AutomationsPage() {
     orderBy: { createdAt: "desc" },
   });
 
-  const automations = data.map(automation => ({
+  type AutomationWithTriggers = typeof data[number];
+
+  const automations = data.map((automation: AutomationWithTriggers) => ({
     ...automation,
     keywords: automation.triggers.flatMap(t => t.keywords)
   }));
