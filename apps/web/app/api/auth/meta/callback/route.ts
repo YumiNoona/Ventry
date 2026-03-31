@@ -6,7 +6,7 @@ import { encryptToken } from "@ventry/db";
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const siteUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  const siteUrl = process.env.NEXT_PUBLIC_BASE_URL;
 
   try {
     const code = searchParams.get("code");
@@ -19,6 +19,12 @@ export async function GET(req: NextRequest) {
 
     const appId = process.env.INSTAGRAM_APP_ID;
     const appSecret = process.env.INSTAGRAM_APP_SECRET;
+
+    if (!siteUrl || !appId || !appSecret) {
+      console.error("[OAuth Callback] Missing configuration");
+      return new NextResponse("Server misconfigured", { status: 500 });
+    }
+
     const redirectUri = `${siteUrl}/api/auth/meta/callback`;
 
     // 1. Exchange Code for Short-Lived User Access Token
@@ -39,13 +45,31 @@ export async function GET(req: NextRequest) {
       `https://graph.facebook.com/v19.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${appId}&client_secret=${appSecret}&fb_exchange_token=${shortLivedToken}`
     );
     const longLivedData = await longLivedResponse.json();
+
+    if (!longLivedResponse.ok || !longLivedData.access_token) {
+      console.error("[OAuth Callback] Long-lived token failure:", longLivedData);
+      return NextResponse.redirect(`${siteUrl}/dashboard/automations?error=long_lived_failed`);
+    }
+
     const longLivedUserToken = longLivedData.access_token;
 
     // 3. Page & Instagram Business Account Discovery
     const pagesResponse = await fetch(
       `https://graph.facebook.com/v19.0/me/accounts?fields=id,name,access_token,instagram_business_account&access_token=${longLivedUserToken}`
     );
-    const pagesData = await pagesResponse.json();
+
+    let pagesData;
+    try {
+      pagesData = await pagesResponse.json();
+    } catch (e) {
+      console.error("[OAuth Callback] Invalid JSON from Meta");
+      return NextResponse.redirect(`${siteUrl}/dashboard/automations?error=invalid_meta_response`);
+    }
+
+    if (!pagesResponse.ok) {
+      console.error("[OAuth Callback] Pages fetch error:", JSON.stringify(pagesData));
+      return NextResponse.redirect(`${siteUrl}/dashboard/automations?error=pages_fetch_failed`);
+    }
 
     if (!pagesData.data || pagesData.data.length === 0) {
       console.warn("[OAuth Callback] No pages found for user.");
@@ -85,7 +109,7 @@ export async function GET(req: NextRequest) {
 
     console.log(`[OAuth Callback] Discovery Complete: ${accountsLinkedCount} accounts linked.`);
 
-    return NextResponse.redirect(`${siteUrl}/dashboard/automations?success=accounts_connected&count=${accountsLinkedCount}`);
+    return NextResponse.redirect(`${siteUrl}/dashboard/automations?success=accounts_connected&count=${encodeURIComponent(accountsLinkedCount)}`);
   } catch (err) {
     console.error("[OAuth Callback] Critical Error:", err);
     return NextResponse.redirect(`${siteUrl}/dashboard/automations?error=internal_server_error`);
