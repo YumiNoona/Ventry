@@ -4,8 +4,15 @@ import { useState } from "react";
 import { Button } from "@ventry/ui/components/ui/button";
 import { Zap, MessageSquare, Plus, SwitchCamera, ToggleRight, ToggleLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { Automation, Trigger, AutomationExecution } from "@ventry/db";
 
-export function AutomationCard({ automation }: { automation: any }) {
+interface AutomationWithTriggers extends Automation {
+  triggers: Trigger[];
+  executions: AutomationExecution[];
+  keywords: string[];
+}
+
+export function AutomationCard({ automation }: { automation: AutomationWithTriggers }) {
   const router = useRouter();
   const [isActive, setIsActive] = useState(automation.isActive);
   const [loading, setLoading] = useState(false);

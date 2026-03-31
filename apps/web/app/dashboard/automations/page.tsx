@@ -8,10 +8,19 @@ import { AutomationCard } from "@/components/dashboard/automation-card";
 export default async function AutomationsPage() {
   const { dbUser } = await requireUser();
 
-  const automations = await prisma.automation.findMany({
+  const data = await prisma.automation.findMany({
     where: { userId: dbUser?.id },
+    include: {
+      triggers: true,
+      executions: true
+    },
     orderBy: { createdAt: "desc" },
   });
+
+  const automations = data.map(automation => ({
+    ...automation,
+    keywords: automation.triggers.flatMap(t => t.keywords)
+  }));
 
   return (
     <div className="space-y-8">
