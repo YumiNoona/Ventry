@@ -76,28 +76,52 @@ export const processWebhookEvent = async (accountId: string, content: string, ev
   });
 
   // 6. Identify which automations map to this incoming event
-  const matchingAutomations = await matchTriggers(accountId, content, eventType);
-  if (matchingAutomations.length === 0) {
+  const triggers = await matchTriggers(accountId, content, eventType, externalId);
+  if (triggers.length === 0) {
     console.log(`[runAutomation] No triggers matched for account: ${accountId}`);
     return;
   }
 
-  // 7. Build conversation history for context
-  const history = await buildContext(thread.id);
+  // 7. Deduplicate & Dispatch to Worker Queue
+  for (const trigger of triggers) {
+    // Deduplication check: Was this exact trigger mapped to this account recently?
+    const exists = await prisma.automationExecution.findFirst({
+      where: {
+        triggerId: trigger.id,
+        automation: {
+          user: {
+            accounts: { some: { id: accountId } }
+          }
+        },
+        createdAt: {
+          gt: new Date(Date.now() - 5 * 60 * 1000)
+        }
+      }
+    });
 
-  // 8. Execute Actions
-  for (const automation of matchingAutomations) {
-    for (const action of automation.actions) {
-      await executeAction(action, {
-        accountId,
-        threadId: thread.id,
-        automationId: automation.id, // CRITICAL: Link for the Audit Log
-        senderId: externalThreadId, // Usually the user's ID
-        history,
-        triggeringMessage: content,
-      });
+    if (exists) {
+      console.log(`[runAutomation] Deduplicated execution for trigger: ${trigger.id}`);
+      continue;
     }
-  }
 
+    // Generate the PENDING execution ticket
+    const execution = await prisma.automationExecution.create({
+      data: {
+        automationId: trigger.automationId,
+        triggerId: trigger.id,
+        messageId: incomingMessage.id, // Track which message spawned this
+        status: "PENDING"
+      }
+    });
+
+    // Enqueue to BullMQ worker explicitly mapped by executionId
+    // We import addReplyJob later, for now we will enqueue directly or via utility
+    const { addReplyJob } = await import("@ventry/queue");
+    await addReplyJob(execution.id, {
+      executionId: execution.id,
+      accountId,
+      text: content
+    });
+  }
 };
 

@@ -155,4 +155,7 @@ export const startWorker = () => {
   });
 };
 
+import { startExecuteActionWorker } from "./jobs/executeAction";
+
 startWorker();
+startExecuteActionWorker();

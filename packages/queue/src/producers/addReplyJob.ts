@@ -1,12 +1,13 @@
 import { replyQueue } from "../queues";
 
 interface ReplyPayload {
-  messageId: string;
-  automationId: string;
+  executionId: string;
+  accountId: string;
+  text: string;
 }
 
 export const addReplyJob = async (id: string, payload: ReplyPayload) => {
-  return await replyQueue.add("reply", payload, {
+  return await replyQueue.add("execute-action", payload, {
     jobId: id, 
     attempts: 5,
     backoff: {

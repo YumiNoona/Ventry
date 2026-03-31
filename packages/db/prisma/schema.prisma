@@ -90,15 +90,23 @@ model Automation {
   @@map("automation")
 }
 
+enum TriggerType {
+  DM
+  COMMENT
+
+  @@map("trigger_type")
+}
 
 model Trigger {
-  id           String     @id @default(cuid())
-  automationId String     @map("automation_id")
-  type         String
+  id           String      @id @default(cuid())
+  automationId String      @map("automation_id")
+  type         TriggerType
   keywords     String[]
+  postId       String?     @map("post_id")
   metadata     Json?
 
   automation Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  executions AutomationExecution[]
 
   @@index([automationId])
   @@map("trigger")
@@ -166,17 +174,29 @@ model Post {
   @@map("post")
 }
 
+enum ExecutionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+
+  @@map("execution_status")
+}
 
 model AutomationExecution {
-  id           String   @id @default(cuid())
-  automationId String   @map("automation_id")
-  messageId    String?  @map("message_id")
-  createdAt    DateTime @default(now()) @map("created_at")
+  id           String          @id @default(cuid())
+  automationId String          @map("automation_id")
+  triggerId    String          @map("trigger_id")
+  messageId    String?         @map("message_id")
+  status       ExecutionStatus @default(PENDING)
+  completedAt  DateTime?       @map("completed_at")
+  createdAt    DateTime        @default(now()) @map("created_at")
 
   automation Automation @relation(fields: [automationId], references: [id], onDelete: Cascade)
+  trigger    Trigger    @relation(fields: [triggerId], references: [id], onDelete: Cascade)
   message    Message?   @relation(fields: [messageId], references: [id], onDelete: SetNull)
 
   @@index([automationId])
+  @@index([triggerId])
   @@map("automation_execution")
 }
 

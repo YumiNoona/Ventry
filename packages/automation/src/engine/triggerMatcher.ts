@@ -1,45 +1,41 @@
-import { prisma } from "@ventry/db";
+import { prisma, TriggerType } from "@ventry/db";
 
-export const matchTriggers = async (accountId: string, content: string, eventType: string) => {
-  // Find active automations for the account's user
-  const account = await prisma.account.findUnique({
-    where: { id: accountId },
-    include: {
-      user: {
-        include: {
-          automations: {
-            where: { isActive: true },
-            include: { triggers: true, actions: true }
+const extractWords = (text: string) => text.toLowerCase().match(/\b\w+\b/g) || [];
+
+export const matchTriggers = async (accountId: string, content: string, eventType: string, mediaId?: string) => {
+  const normalizedType: TriggerType = eventType === "messages" ? "DM" : "COMMENT";
+
+  const triggers = await prisma.trigger.findMany({
+    where: {
+      automation: {
+        user: {
+          accounts: { some: { id: accountId } }
+        },
+        isActive: true, // Only active automations
+      },
+      AND: [
+        {
+          keywords: {
+            hasSome: extractWords(content)
           }
+        },
+        {
+          OR: [
+            { type: "DM" },
+            {
+              type: "COMMENT",
+              postId: mediaId, // Restrict comments to specific media if configured
+            }
+          ]
         }
+      ]
+    },
+    include: {
+      automation: {
+        include: { actions: true }
       }
     }
   });
 
-  if (!account) return [];
-
-  const matchedAutomations = [];
-
-  for (const automation of account.user.automations) {
-    for (const trigger of automation.triggers) {
-      if (trigger.type !== eventType) continue;
-
-      const keywords = trigger.keywords || [];
-      if (keywords.length === 0) {
-        matchedAutomations.push(automation);
-        continue;
-      }
-
-      // Simple keyword match (can be enhanced with regex)
-      const lowerContent = content.toLowerCase();
-      const hasMatch = keywords.some(kw => lowerContent.includes(kw.toLowerCase()));
-      
-      if (hasMatch) {
-        matchedAutomations.push(automation);
-        break; // matched this automation
-      }
-    }
-  }
-
-  return matchedAutomations;
+  return triggers;
 };
