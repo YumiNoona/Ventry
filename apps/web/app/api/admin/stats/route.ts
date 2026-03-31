@@ -30,7 +30,7 @@ export async function GET() {
       select: { name: true, platform: true }
     });
 
-    const alerts = invalidAccounts.map(acc => `Token Revoked: ${acc.platform} (${acc.name || "Unknown"})`);
+    const alerts = invalidAccounts.map((acc: { platform: string, name: string | null }) => `Token Revoked: ${acc.platform} (${acc.name || "Unknown"})`);
 
     return NextResponse.json({
       queue: {
