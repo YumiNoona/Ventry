@@ -4,12 +4,12 @@ import { useState } from "react";
 import { Button } from "@ventry/ui/components/ui/button";
 import { Zap, MessageSquare, Plus, SwitchCamera, ToggleRight, ToggleLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Automation, Trigger, AutomationExecution } from "@ventry/db";
-
-interface AutomationWithTriggers extends Automation {
-  triggers: Trigger[];
-  executions: AutomationExecution[];
+interface AutomationWithTriggers {
+  id: string;
+  name: string;
+  isActive: boolean;
   keywords: string[];
+  executions: any[];
 }
 
 export function AutomationCard({ automation }: { automation: AutomationWithTriggers }) {
