@@ -18,10 +18,11 @@ export default async function AutomationsPage() {
   });
 
   type AutomationWithTriggers = typeof data[number];
+  type Trigger = AutomationWithTriggers["triggers"][number];
 
   const automations = data.map((automation: AutomationWithTriggers) => ({
     ...automation,
-    keywords: automation.triggers.flatMap(t => t.keywords)
+    keywords: automation.triggers.flatMap((t: Trigger) => t.keywords)
   }));
 
   return (
