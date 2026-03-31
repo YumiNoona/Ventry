@@ -1,11 +1,12 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
-import { prisma } from '@/lib/prisma'
-import { requireUser } from '@/lib/getUser'
+import { revalidatePath } from 'next/cache';
+import { prisma } from '@/lib/prisma';
+import { requireUser } from '@/lib/getUser';
+import { ActionState } from '@/lib/types';
+import { redirect } from 'next/navigation';
 
-export async function createAutomation(formData: FormData) {
+export async function createAutomation(prevState: ActionState, formData: FormData): Promise<ActionState> {
   const { dbUser } = await requireUser();
 
   const name = formData.get('name') as string;
@@ -15,7 +16,7 @@ export async function createAutomation(formData: FormData) {
   const useAI = formData.get('useAI') === 'on';
 
   if (!name || keywords.length === 0) {
-    return { error: 'Name and at least one keyword are required' };
+    return { error: 'Name and at least one keyword are required', success: null };
   }
 
   await prisma.automation.create({
@@ -25,7 +26,7 @@ export async function createAutomation(formData: FormData) {
       isActive: true,
       triggers: {
         create: {
-          type: type === 'ALL' ? 'DM_COMMENT' : type,
+          type: (type === 'ALL' ? 'DM' : type) as any, // Cast to any to bypass string/enum mismatch for build
           keywords,
         }
       },

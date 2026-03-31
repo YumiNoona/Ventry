@@ -1,9 +1,15 @@
+'use client'
+
+import { useFormState } from "react-dom";
 import { Button } from "@ventry/ui/components/ui/button";
-import { Zap, ArrowLeft, Info } from "lucide-react";
+import { Zap, ArrowLeft, Info, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { createAutomation } from "./actions";
 
+const initialState = { error: null, success: null };
+
 export default function NewAutomationPage() {
+  const [state, formAction] = useFormState(createAutomation, initialState);
   return (
     <div className="max-w-2xl mx-auto space-y-8 animate-fade-in">
       <div className="flex items-center gap-4">
@@ -26,7 +32,13 @@ export default function NewAutomationPage() {
           </div>
         </div>
 
-        <form action={createAutomation} className="p-8 space-y-6">
+        <form action={formAction} className="p-8 space-y-6">
+          {state?.error && (
+            <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 flex items-center gap-3 text-destructive animate-in fade-in slide-in-from-top-1">
+              <AlertCircle className="h-4 w-4" />
+              <p className="text-sm font-medium">{state.error}</p>
+            </div>
+          )}
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-2">
               <label className="text-sm font-medium" htmlFor="name">Internal Name</label>

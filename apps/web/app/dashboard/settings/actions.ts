@@ -4,8 +4,9 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase'
 import { prisma } from '@/lib/prisma'
 import { requireUser } from '@/lib/getUser'
+import { ActionState } from '@/lib/types';
 
-export async function updateProfile(formData: FormData) {
+export async function updateProfile(prevState: ActionState, formData: FormData): Promise<ActionState> {
   const { authUser, dbUser } = await requireUser();
   const supabase = createClient();
 
@@ -16,7 +17,7 @@ export async function updateProfile(formData: FormData) {
   if (email !== authUser.email) {
     const { error } = await supabase.auth.updateUser({ email });
     if (error) {
-      return { error: error.message };
+      return { error: error.message, success: null };
     }
   }
 
@@ -27,10 +28,10 @@ export async function updateProfile(formData: FormData) {
   });
 
   revalidatePath('/dashboard/settings');
-  return { success: "Profile updated successfully" };
+  return { error: null, success: "Profile updated successfully" };
 }
 
-export async function updatePassword(formData: FormData) {
+export async function updatePassword(prevState: ActionState, formData: FormData): Promise<ActionState> {
   const { authUser } = await requireUser();
   const supabase = createClient();
 
@@ -39,8 +40,8 @@ export async function updatePassword(formData: FormData) {
   const { error } = await supabase.auth.updateUser({ password });
   
   if (error) {
-    return { error: error.message };
+    return { error: error.message, success: null };
   }
 
-  return { success: "Password updated successfully" };
+  return { error: null, success: "Password updated successfully" };
 }
