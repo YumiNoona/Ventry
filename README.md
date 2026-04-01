@@ -1,3 +1,5 @@
+<div align="center">
+
 # 🚀 Ventry
 
 ### AI-Powered Social Automation Engine
@@ -10,6 +12,9 @@ A high-performance event-driven SaaS monorepo for automating social media intera
 ![BullMQ](https://img.shields.io/badge/BullMQ-Worker-FF4F00?style=flat-square)
 ![Redis](https://img.shields.io/badge/Upstash_Redis-TCP-DC382D?style=flat-square&logo=redis)
 ![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?style=flat-square&logo=prisma)
+
+</div>
+
 
 ---
 
