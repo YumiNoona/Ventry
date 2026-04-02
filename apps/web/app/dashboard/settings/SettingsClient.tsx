@@ -22,13 +22,8 @@ export default function SettingsClient({ dbUser, authUser }: SettingsClientProps
   const [passwordState, passwordAction] = useFormState(updatePassword, initialState);
 
   return (
-    <div className="max-w-3xl space-y-8 animate-fade-in">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Settings</h1>
-        <p className="text-muted-foreground mt-1 text-sm font-medium">Manage your profile, connected accounts, and billing.</p>
-      </div>
-
-      <div className="grid gap-8">
+    <div className="max-w-4xl mx-auto space-y-10 animate-fade-in py-4">
+      <div className="grid gap-10">
         {/* Profile Settings */}
         <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden transition-all hover:shadow-md">
           <div className="p-6 border-b border-border bg-muted/30">

@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from "react";
 import { useFormState } from "react-dom";
 import { Button } from "@ventry/ui/components/ui/button";
 import { Zap, ArrowLeft, Info, AlertCircle } from "lucide-react";
@@ -10,6 +11,8 @@ const initialState = { error: null, success: null };
 
 export default function NewAutomationPage() {
   const [state, formAction] = useFormState(createAutomation, initialState);
+  const [useAI, setUseAI] = useState(true);
+
   return (
     <div className="max-w-2xl mx-auto space-y-8 animate-fade-in">
       <div className="flex items-center gap-4">
@@ -88,16 +91,39 @@ export default function NewAutomationPage() {
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex items-start gap-4 shadow-sm">
-             <div className="mt-1">
-               <input type="checkbox" name="useAI" id="useAI" defaultChecked className="accent-primary size-5" />
-             </div>
-             <div className="space-y-1">
-               <label htmlFor="useAI" className="text-sm font-bold cursor-pointer">Persona-Engaged AI Reply</label>
-               <p className="text-xs text-muted-foreground leading-relaxed">
-                 Generative AI will craft a context-aware response using your brand persona. If disabled, a system default will be used.
-               </p>
-             </div>
+          <div className="space-y-4">
+            <div className="p-4 rounded-xl bg-primary/5 border border-primary/10 flex items-start gap-4 shadow-sm">
+              <div className="mt-1">
+                <input 
+                  type="checkbox" 
+                  name="useAI" 
+                  id="useAI" 
+                  onChange={(e) => setUseAI(e.target.checked)} 
+                  checked={useAI} 
+                  className="accent-primary size-5" 
+                />
+              </div>
+              <div className="space-y-1">
+                <label htmlFor="useAI" className="text-sm font-bold cursor-pointer">Persona-Engaged AI Reply</label>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Generative AI will craft a context-aware response using your brand persona. If disabled, a custom reply will be used.
+                </p>
+              </div>
+            </div>
+
+            {!useAI && (
+              <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                <label className="text-sm font-medium" htmlFor="customReply">Custom Reply</label>
+                <textarea 
+                  id="customReply" 
+                  name="customReply" 
+                  required 
+                  placeholder="Type the exact message to send when this keyword is triggered…"
+                  className="w-full min-h-[100px] rounded-md border bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" 
+                />
+                <p className="text-xs text-muted-foreground">When AI is off, Ventry sends this exact text every time.</p>
+              </div>
+            )}
           </div>
 
           <div className="pt-6 flex gap-4 border-t border-border">

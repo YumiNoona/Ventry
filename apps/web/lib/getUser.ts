@@ -11,6 +11,17 @@ export async function getUser() {
   return user;
 }
 
+export async function getAuthUser() {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  return user;
+}
+
 export async function requireUser() {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();

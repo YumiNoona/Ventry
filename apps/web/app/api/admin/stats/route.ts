@@ -2,12 +2,12 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import { replyQueue, postQueue, ingestQueue } from "@ventry/queue";
-import { requireUser } from "@/lib/getUser";
+import { getAuthUser } from "@/lib/getUser";
 
 export async function GET() {
   try {
-    // 1. Ensure user is authenticated (and ideally an admin, but we'll check base auth first)
-    await requireUser();
+    // 1. Ensure user is authenticated
+    await getAuthUser();
 
     // 2. Fetch Queue Counts (BullMQ O(1))
     const [replyCounts, postCounts, ingestCounts] = await Promise.all([

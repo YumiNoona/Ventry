@@ -1,32 +1,33 @@
 import { OnboardingChecklist } from "@/components/dashboard/onboarding-checklist";
 import { SystemStatus } from "@/components/dashboard/system-status";
-import { requireUser } from "@/lib/getUser";
+import { getAuthUser } from "@/lib/getUser";
 import { prisma } from "@/lib/prisma";
 import { Zap, MessageSquare, Link as LinkIcon, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@ventry/ui/components/ui/button";
 
 export default async function DashboardPage() {
-  const { dbUser } = await requireUser();
+  const user = await getAuthUser();
+  const userName = user.user_metadata?.full_name || user.email?.split('@')[0] || 'User';
 
   // Basic stats
   const [totalReplies, activeAccounts, automationsCount, activeAutomationsCount] = await Promise.all([
     prisma.automationExecution.count({ 
-      where: { automation: { userId: dbUser?.id } } 
+      where: { automation: { userId: user.id } } 
     }),
     prisma.account.count({ 
-      where: { userId: dbUser?.id, accessToken: { not: null } } 
+      where: { userId: user.id, accessToken: { not: null } } 
     }),
     prisma.automation.count({
-      where: { userId: dbUser?.id }
+      where: { userId: user.id }
     }),
     prisma.automation.count({
-      where: { userId: dbUser?.id, isActive: true }
+      where: { userId: user.id, isActive: true }
     })
   ]);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="max-w-6xl mx-auto space-y-10 animate-fade-in py-4">
       <OnboardingChecklist 
         hasAccounts={activeAccounts > 0} 
         hasAutomations={automationsCount > 0} 
@@ -34,7 +35,7 @@ export default async function DashboardPage() {
       />
       
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Welcome back, {dbUser?.name?.split(' ')[0] || 'User'}!</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Welcome back, {userName.split(' ')[0]}!</h1>
         <Link href="/dashboard/automations/new">
           <Button className="gap-2 shadow-sm hover:shadow-md">
             <Zap className="h-4 w-4" />

@@ -11,7 +11,10 @@ export const metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" data-theme="dark" className={inter.variable}>
+    <html lang="en" suppressHydrationWarning className={inter.variable}>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `(function(){var t=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',t)})()` }} />
+      </head>
       <body className="min-h-screen bg-background font-sans text-foreground antialiased">
         <div className="relative flex min-h-screen flex-col">
           {children}

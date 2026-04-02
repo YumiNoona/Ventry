@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { 
@@ -8,11 +7,8 @@ import {
   Settings, 
   MessageSquare, 
   BarChart, 
-  Zap,
-  LogOut,
-  Loader2
+  Zap
 } from "lucide-react";
-import { createBrowserClient } from "@/lib/supabase-browser";
 
 const navItems = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -24,18 +20,6 @@ const navItems = [
 
 export function Sidebar({ user }: { user: { name: string | null; email: string } | null }) {
   const pathname = usePathname();
-  const [loggingOut, setLoggingOut] = useState(false);
-
-  const handleLogout = async () => {
-    setLoggingOut(true);
-    try {
-      const supabase = createBrowserClient();
-      await supabase.auth.signOut();
-      window.location.href = "/login";
-    } catch (e) {
-      setLoggingOut(false);
-    }
-  };
 
   return (
     <div className="w-64 flex-shrink-0 border-r border-border bg-card/80 backdrop-blur-xl flex flex-col justify-between">
@@ -79,34 +63,6 @@ export function Sidebar({ user }: { user: { name: string | null; email: string }
         </nav>
       </div>
 
-      <div className="p-4 border-t border-border space-y-3">
-        <div className="flex items-center gap-3 px-1">
-          <div className="size-9 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center text-xs font-bold text-primary ring-2 ring-primary/10 uppercase">
-            {user?.name?.charAt(0) || "U"}
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold truncate">{user?.name || "User"}</p>
-            <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
-          </div>
-        </div>
-        <button 
-          onClick={handleLogout}
-          disabled={loggingOut}
-          className="flex items-center justify-center gap-2 w-full px-3 py-2 text-sm text-muted-foreground font-medium rounded-lg hover:bg-destructive/10 hover:text-destructive transition-all duration-200 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {loggingOut ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Signing out…
-            </>
-          ) : (
-            <>
-              <LogOut className="h-4 w-4" />
-              Sign Out
-            </>
-          )}
-        </button>
-      </div>
     </div>
   );
 }

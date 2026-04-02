@@ -1,14 +1,14 @@
-import { requireUser } from "@/lib/getUser";
+import { getAuthUser } from "@/lib/getUser";
 import { prisma } from "@/lib/prisma";
 import { MessageSquare, User, Bot, Clock, Filter, Search } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 
 export default async function InboxPage() {
-  const { dbUser } = await requireUser();
+  const user = await getAuthUser();
 
   // Get all messages for the current user's accounts, grouped by threadId
   const data = await prisma.message.findMany({
-    where: { account: { userId: dbUser?.id } },
+    where: { account: { userId: user.id } },
     include: { account: true, thread: true },
     orderBy: { createdAt: "desc" },
   });
@@ -35,20 +35,19 @@ export default async function InboxPage() {
   type Thread = typeof threads[number];
 
   return (
-    <div className="h-[calc(100vh-160px)] flex rounded-2xl border border-border bg-card overflow-hidden shadow-sm">
+    <div className="h-[calc(100vh-56px)] -m-6 flex border-l border-border bg-card overflow-hidden shadow-sm animate-in fade-in zoom-in-95 duration-300">
       {/* Thread List Sidebar */}
       <div className="w-80 border-r border-border flex flex-col bg-muted/10">
-        <div className="p-4 border-b border-border space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="font-bold text-lg">Inbox</h2>
-            <div className="flex gap-2">
-              <button className="p-1.5 rounded-md hover:bg-muted text-muted-foreground transition-colors active:scale-95"><Search className="h-4 w-4" /></button>
-              <button className="p-1.5 rounded-md hover:bg-muted text-muted-foreground transition-colors active:scale-95"><Filter className="h-4 w-4" /></button>
+        <div className="p-4 border-b border-border bg-muted/10">
+          <div className="flex items-center gap-4">
+            <div className="flex-1 flex gap-2">
+               <div className="flex-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-tighter flex items-center justify-center py-2 cursor-pointer transition-colors hover:bg-primary/20 ring-1 ring-primary/20">All Threads</div>
+               <div className="flex-1 rounded-full bg-muted text-muted-foreground text-[10px] font-bold uppercase tracking-tighter flex items-center justify-center py-2 cursor-pointer transition-colors hover:bg-muted/80">Unread</div>
             </div>
-          </div>
-          <div className="flex gap-2">
-             <div className="flex-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-tighter flex items-center justify-center py-1 cursor-pointer transition-colors hover:bg-primary/20">All Threads</div>
-             <div className="flex-1 rounded-full bg-muted text-muted-foreground text-[10px] font-bold uppercase tracking-tighter flex items-center justify-center py-1 cursor-pointer transition-colors hover:bg-muted/80">Unread</div>
+            <div className="flex items-center gap-1">
+              <button className="p-2 rounded-lg hover:bg-muted text-muted-foreground transition-colors active:scale-95"><Search className="h-4 w-4" /></button>
+              <button className="p-2 rounded-lg hover:bg-muted text-muted-foreground transition-colors active:scale-95"><Filter className="h-4 w-4" /></button>
+            </div>
           </div>
         </div>
         

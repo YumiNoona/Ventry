@@ -1,4 +1,4 @@
-import { requireUser } from "@/lib/getUser";
+import { getAuthUser } from "@/lib/getUser";
 import { prisma } from "@/lib/prisma";
 import { Button } from "@ventry/ui/components/ui/button";
 import { Zap, Plus } from "lucide-react";
@@ -6,10 +6,10 @@ import Link from "next/link";
 import { AutomationCard } from "@/components/dashboard/automation-card";
 
 export default async function AutomationsPage() {
-  const { dbUser } = await requireUser();
+  const user = await getAuthUser();
 
   const data = await prisma.automation.findMany({
-    where: { userId: dbUser?.id },
+    where: { userId: user.id },
     include: {
       triggers: true,
       executions: true
@@ -26,15 +26,11 @@ export default async function AutomationsPage() {
   }));
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Automations</h1>
-          <p className="text-muted-foreground mt-1">Manage your keyword-triggered AI reply sequences.</p>
-        </div>
+    <div className="max-w-5xl mx-auto space-y-6 animate-fade-in py-4">
+      <div className="flex items-center justify-end">
         <Link href="/dashboard/automations/new">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
+          <Button className="gap-2 shadow-sm hover:shadow-md transition-all active:scale-95">
+            <Plus className="h-4 w-4" strokeWidth={3} />
             New Automation
           </Button>
         </Link>

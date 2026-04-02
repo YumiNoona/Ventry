@@ -32,16 +32,11 @@ const COLORS = ['#adfa1d', '#2563eb', '#8b5cf6', '#f59e0b'];
 export default function AnalyticsPage() {
   return (
     <div className="space-y-8 animate-fade-in">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
-        <p className="text-muted-foreground mt-1">Real-time performance of your AI engagement engine.</p>
-      </div>
-
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-xl border bg-card p-6 shadow-sm">
           <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium">Total Engagement</h3>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-widest text-[10px] font-bold">Total Engagement</h3>
+            <MessageSquare className="h-4 w-4 text-muted-foreground opacity-30" />
           </div>
           <div className="text-2xl font-bold">1,284</div>
           <p className="text-xs text-muted-foreground mt-1">
@@ -52,8 +47,8 @@ export default function AnalyticsPage() {
         </div>
         <div className="rounded-xl border bg-card p-6 shadow-sm">
           <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium">AI Replies</h3>
-            <Zap className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-widest text-[10px] font-bold">AI Replies</h3>
+            <Zap className="h-4 w-4 text-muted-foreground opacity-30" />
           </div>
           <div className="text-2xl font-bold">452</div>
           <p className="text-xs text-muted-foreground mt-1">
@@ -62,8 +57,8 @@ export default function AnalyticsPage() {
         </div>
         <div className="rounded-xl border bg-card p-6 shadow-sm">
           <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium">Unique Accounts</h3>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-widest text-[10px] font-bold">Unique Accounts</h3>
+            <Users className="h-4 w-4 text-muted-foreground opacity-30" />
           </div>
           <div className="text-2xl font-bold">89</div>
           <p className="text-xs text-muted-foreground mt-1">
@@ -72,8 +67,8 @@ export default function AnalyticsPage() {
         </div>
         <div className="rounded-xl border bg-card p-6 shadow-sm">
           <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium">Time Saved</h3>
-            <ArrowUpRight className="h-4 w-4 text-muted-foreground" />
+            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-widest text-[10px] font-bold">Time Saved</h3>
+            <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-30" />
           </div>
           <div className="text-2xl font-bold">14.2h</div>
           <p className="text-xs text-muted-foreground mt-1">
@@ -84,9 +79,14 @@ export default function AnalyticsPage() {
 
       <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-7">
         <div className="col-span-4 rounded-xl border bg-card p-6 shadow-sm">
-          <div className="mb-6">
-             <h3 className="font-bold text-lg">Message Volume</h3>
-             <p className="text-sm text-muted-foreground">Daily inbound vs. AI replies.</p>
+          <div className="mb-6 flex items-center justify-between">
+             <div>
+              <h3 className="font-bold text-lg tracking-tight">Message Volume</h3>
+              <p className="text-sm text-muted-foreground">Daily inbound vs. AI replies.</p>
+             </div>
+             <div className="size-8 rounded-full bg-muted/50 flex items-center justify-center">
+                <BarChart className="h-4 w-4 opacity-50" />
+             </div>
           </div>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -101,32 +101,40 @@ export default function AnalyticsPage() {
                 <XAxis 
                   dataKey="name" 
                   stroke="#888888" 
-                  fontSize={12} 
+                  fontSize={10} 
                   tickLine={false} 
                   axisLine={false} 
+                  fontWeight="bold"
                 />
                 <YAxis 
                    stroke="#888888" 
-                   fontSize={12} 
+                   fontSize={10} 
                    tickLine={false} 
                    axisLine={false} 
+                   fontWeight="bold"
                    tickFormatter={(value) => `${value}`}
                 />
                 <Tooltip 
                   contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }}
                   itemStyle={{ fontSize: '12px' }}
+                  cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: '4 4' }}
                 />
-                <Area type="monotone" dataKey="received" stroke="#888888" fillOpacity={0.1} fill="#888888" />
-                <Area type="monotone" dataKey="sent" stroke="#adfa1d" fillOpacity={1} fill="url(#colorSent)" />
+                <Area type="monotone" dataKey="received" stroke="#888888" fillOpacity={0.05} fill="#888888" strokeWidth={2} />
+                <Area type="monotone" dataKey="sent" stroke="#adfa1d" fillOpacity={1} fill="url(#colorSent)" strokeWidth={3} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         <div className="col-span-3 rounded-xl border bg-card p-6 shadow-sm">
-           <div className="mb-6">
-             <h3 className="font-bold text-lg">Top Triggers</h3>
-             <p className="text-sm text-muted-foreground">Highest converting keyword groups.</p>
+           <div className="mb-6 flex items-center justify-between">
+             <div>
+              <h3 className="font-bold text-lg tracking-tight">Top Triggers</h3>
+              <p className="text-sm text-muted-foreground">Highest converting keyword groups.</p>
+             </div>
+             <div className="size-8 rounded-full bg-muted/50 flex items-center justify-center">
+                <Zap className="h-4 w-4 opacity-50 text-primary" />
+             </div>
           </div>
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -135,11 +143,20 @@ export default function AnalyticsPage() {
                 { name: 'DEMO', hits: 98 },
                 { name: 'DISCOUNT', hits: 76 },
                 { name: 'HELP', hits: 42 },
-              ]} layout="vertical">
+              ]} layout="vertical" barCategoryGap="30%">
                 <XAxis type="number" hide />
-                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} fontSize={12} width={70} />
+                <YAxis 
+                  dataKey="name" 
+                  type="category" 
+                  axisLine={false} 
+                  tickLine={false} 
+                  fontSize={10} 
+                  width={80} 
+                  fontWeight="900"
+                  tick={{ fill: 'hsl(var(--foreground))', opacity: 0.8 }}
+                />
                 <Tooltip cursor={{ fill: 'transparent' }} />
-                <Bar dataKey="hits" radius={[0, 4, 4, 0]} barSize={20}>
+                <Bar dataKey="hits" radius={[0, 6, 6, 0]} barSize={24}>
                    <Cell fill="#adfa1d" />
                    <Cell fill="#2563eb" />
                    <Cell fill="#8b5cf6" />

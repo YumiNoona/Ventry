@@ -13,7 +13,8 @@ export async function createAutomation(prevState: ActionState, formData: FormDat
   const keywordsStr = formData.get('keywords') as string;
   const keywords = keywordsStr.split(',').map(k => k.trim().toUpperCase()).filter(Boolean);
   const type = formData.get('type') as string; // 'DM' or 'COMMENT' or 'ALL'
-  const useAI = formData.get('useAI') === 'on';
+  const useAI = formData.get('useAI') === 'on' || formData.get('useAI') === 'true';
+  const customReply = formData.get('customReply') as string;
 
   if (!name || keywords.length === 0) {
     return { error: 'Name and at least one keyword are required', success: null };
@@ -33,7 +34,7 @@ export async function createAutomation(prevState: ActionState, formData: FormDat
       actions: {
         create: {
           type: useAI ? 'AI_REPLY' : 'TEXT_REPLY',
-          payload: useAI ? { model: 'gemini-1.5-flash' } : { text: 'Default response' }
+          payload: useAI ? { model: 'gemini-1.5-flash' } : { text: customReply || 'Default response' }
         }
       }
     }
