@@ -22,91 +22,116 @@ export default function SettingsClient({ dbUser, authUser }: SettingsClientProps
   const [passwordState, passwordAction] = useFormState(updatePassword, initialState);
 
   return (
-    <div className="max-w-4xl mx-auto space-y-10 animate-fade-in py-4">
-      <div className="grid gap-10">
-        {/* Profile Settings */}
-        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden transition-all hover:shadow-md">
-          <div className="p-6 border-b border-border bg-muted/30">
-            <h3 className="text-lg font-bold tracking-tight">Profile</h3>
-            <p className="text-sm text-muted-foreground mt-1">Update your personal information.</p>
+    <div className="max-w-5xl mx-auto space-y-12 animate-page-enter p-8">
+      {/* Profile Section */}
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-10 stagger-children">
+        <div className="lg:col-span-1 space-y-3">
+          <h2 className="text-2xl font-black tracking-tighter">Profile Configuration</h2>
+          <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+            Manage your personal identity and public-facing profile information across Ventry.
+          </p>
+          <div className="pt-4 flex items-center gap-3">
+             <div className="size-10 rounded-2xl bg-primary/10 flex items-center justify-center text-primary font-black text-xs">V</div>
+             <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Verified Member</p>
           </div>
-          <div className="p-8 bg-card">
-            <form key={profileState?.success} action={profileAction} className="space-y-6 max-w-md">
-              {profileState?.error && (
-                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 flex items-center gap-3 text-destructive animate-in fade-in slide-in-from-top-1">
-                  <AlertCircle className="h-4 w-4" />
-                  <p className="text-xs font-bold leading-none">{profileState.error}</p>
-                </div>
-              )}
-              {profileState?.success && (
-                <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 flex items-center gap-3 text-primary animate-in fade-in slide-in-from-top-1">
-                  <CheckCircle2 className="h-4 w-4" />
-                  <p className="text-xs font-bold leading-none">{profileState.success}</p>
-                </div>
-              )}
+        </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Display Name</label>
+        <div className="lg:col-span-2 bento-card border-border/40 p-10 group overflow-hidden relative">
+          <div className="absolute -top-10 -right-10 size-40 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-colors" />
+          
+          <form key={profileState?.success} action={profileAction} className="space-y-8 relative z-10">
+            {profileState?.error && (
+              <div className="p-4 rounded-2xl bg-destructive/5 border border-destructive/10 flex items-center gap-4 text-destructive animate-in slide-in-from-top-2">
+                <AlertCircle className="h-5 w-5" />
+                <p className="text-sm font-bold">{profileState.error}</p>
+              </div>
+            )}
+            {profileState?.success && (
+              <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-center gap-4 text-primary animate-in slide-in-from-top-2">
+                <CheckCircle2 className="h-5 w-5" />
+                <p className="text-sm font-bold">{profileState.success}</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Full Name</label>
                 <input 
                   name="name" 
                   defaultValue={dbUser?.name || ""} 
-                  className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary transition-all shadow-sm" 
-                  placeholder="Your full name"
+                  className="w-full h-12 rounded-2xl border border-transparent bg-muted/40 px-5 text-sm font-bold transition-all focus:bg-background focus:border-primary/40 focus:ring-4 focus:ring-primary/5 outline-none placeholder:text-muted-foreground/30" 
+                  placeholder="Jane Doe"
                 />
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Email Address</label>
+              <div className="space-y-3">
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">Email Address</label>
                 <input 
                   name="email" 
                   type="email"
                   defaultValue={authUser?.email || ""} 
-                  className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary transition-all shadow-sm" 
+                  className="w-full h-12 rounded-2xl border border-transparent bg-muted/20 px-5 text-sm font-bold opacity-60 cursor-not-allowed outline-none" 
+                  disabled
                   placeholder="name@example.com"
                 />
-                <p className="text-[10px] text-muted-foreground/80 font-medium px-1 italic">Changing your email requires new verification.</p>
               </div>
-              <Button type="submit" className="w-full sm:w-auto px-8 font-bold rounded-xl shadow-lg shadow-primary/10 transition-transform active:scale-95">Save Changes</Button>
-            </form>
-          </div>
+            </div>
+
+            <div className="pt-4 border-t border-border/40 flex justify-end">
+              <Button type="submit" className="h-12 px-10 rounded-2xl font-black shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+                Save Profile
+              </Button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <div className="h-px bg-gradient-to-r from-transparent via-border/40 to-transparent" />
+
+      {/* Security Section */}
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-10 stagger-children">
+        <div className="lg:col-span-1 space-y-3">
+          <h2 className="text-2xl font-black tracking-tighter">Security & Privacy</h2>
+          <p className="text-sm font-medium text-muted-foreground leading-relaxed">
+            Update your password and manage session security protocols.
+          </p>
         </div>
 
-        {/* Security / Password */}
-        <div className="rounded-2xl border border-border bg-card shadow-sm overflow-hidden transition-all hover:shadow-md">
-          <div className="p-6 border-b border-border bg-muted/30">
-            <h3 className="text-lg font-bold tracking-tight">Security</h3>
-            <p className="text-sm text-muted-foreground mt-1">Update your password to keep your account secure.</p>
-          </div>
-          <div className="p-8 bg-card">
-            <form key={passwordState?.success} action={passwordAction} className="space-y-6 max-w-md">
-              {passwordState?.error && (
-                <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 flex items-center gap-3 text-destructive animate-in fade-in slide-in-from-top-1">
-                  <AlertCircle className="h-4 w-4" />
-                  <p className="text-xs font-bold leading-none">{passwordState.error}</p>
-                </div>
-              )}
-              {passwordState?.success && (
-                <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 flex items-center gap-3 text-primary animate-in fade-in slide-in-from-top-1">
-                  <CheckCircle2 className="h-4 w-4" />
-                  <p className="text-xs font-bold leading-none">{passwordState.success}</p>
-                </div>
-              )}
-
-              <div className="space-y-2">
-                <label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">New Password</label>
-                <input 
-                  name="password" 
-                  type="password"
-                  placeholder="••••••••"
-                  className="w-full rounded-xl border border-border bg-background px-4 py-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary transition-all shadow-sm" 
-                  minLength={6}
-                  required
-                />
+        <div className="lg:col-span-2 bento-card border-border/40 p-10 group overflow-hidden relative">
+          <form key={passwordState?.success} action={passwordAction} className="space-y-8 relative z-10 max-w-md">
+            {passwordState?.error && (
+              <div className="p-4 rounded-2xl bg-destructive/5 border border-destructive/10 flex items-center gap-4 text-destructive animate-in slide-in-from-top-2">
+                <AlertCircle className="h-5 w-5" />
+                <p className="text-sm font-bold">{passwordState.error}</p>
               </div>
-              <Button type="submit" variant="secondary" className="w-full sm:w-auto px-8 font-bold rounded-xl shadow-lg transition-transform active:scale-95">Update Password</Button>
-            </form>
-          </div>
+            )}
+            {passwordState?.success && (
+              <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-center gap-4 text-primary animate-in slide-in-from-top-2">
+                <CheckCircle2 className="h-5 w-5" />
+                <p className="text-sm font-bold">{passwordState.success}</p>
+              </div>
+            )}
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-1">New Password</label>
+              <input 
+                name="password" 
+                type="password"
+                placeholder="••••••••••••"
+                className="w-full h-12 rounded-2xl border border-transparent bg-muted/40 px-5 text-sm font-bold transition-all focus:bg-background focus:border-primary/40 focus:ring-4 focus:ring-primary/5 outline-none" 
+                minLength={6}
+                required
+              />
+              <p className="text-[10px] font-bold text-muted-foreground/60 ml-1">Minimum 6 characters required.</p>
+            </div>
+
+            <div className="pt-4">
+              <Button type="submit" variant="secondary" className="h-12 px-10 rounded-2xl font-black shadow-lg hover:bg-muted active:scale-95 transition-all border border-border/40">
+                Update Password
+              </Button>
+            </div>
+          </form>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

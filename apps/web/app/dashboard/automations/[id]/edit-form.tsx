@@ -3,35 +3,53 @@
 import { useState } from "react";
 import { useFormState } from "react-dom";
 import { Button } from "@ventry/ui/components/ui/button";
-import { Zap, ArrowLeft, Info, AlertCircle } from "lucide-react";
+import { Zap, ArrowLeft, Info, AlertCircle, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { createAutomation } from "./actions";
+import { updateAutomation, deleteAutomation } from "./actions";
+
+interface InitialData {
+  id: string;
+  name: string;
+  triggerType: string;
+  keywords: string;
+  useAI: boolean;
+  customReply: string;
+}
 
 const initialState = { error: null, success: null };
 
-export default function NewAutomationPage() {
-  const [state, formAction] = useFormState(createAutomation, initialState);
-  const [useAI, setUseAI] = useState(true);
+export function EditAutomationForm({ initialData }: { initialData: InitialData }) {
+  const updateWithId = updateAutomation.bind(null, initialData.id);
+  const [state, formAction] = useFormState(updateWithId, initialState);
+  const [useAI, setUseAI] = useState(initialData.useAI);
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-fade-in py-6">
-      <div className="flex items-center gap-4">
-        <Link href="/dashboard/automations">
-          <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 shrink-0">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Create Automation</h1>
-          <p className="text-sm font-medium text-muted-foreground mt-1">Set up a new keyword-triggered AI response flow.</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link href="/dashboard/automations">
+            <Button variant="ghost" size="icon" className="rounded-full h-10 w-10 shrink-0">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Edit Sequence</h1>
+            <p className="text-sm font-medium text-muted-foreground mt-1">Configure your keyword-triggered AI response flow.</p>
+          </div>
         </div>
+        
+        <form action={() => deleteAutomation(initialData.id)}>
+          <Button variant="destructive" size="icon" className="rounded-lg shadow-sm w-9 h-9 opacity-80 hover:opacity-100">
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </form>
       </div>
 
       <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
         <div className="p-4 border-b border-border bg-muted/20">
           <div className="flex items-center gap-2 text-foreground uppercase font-semibold text-xs tracking-wider">
             <Zap className="h-3.5 w-3.5" />
-            Configuring New Trigger
+            Configuring Trigger
           </div>
         </div>
 
@@ -48,6 +66,7 @@ export default function NewAutomationPage() {
               <input 
                 id="name" 
                 name="name" 
+                defaultValue={initialData.name}
                 required 
                 placeholder="e.g. Sales Inquiry Response"
                 className="w-full rounded-md border bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-foreground transition-colors placeholder:text-muted-foreground/60" 
@@ -60,6 +79,7 @@ export default function NewAutomationPage() {
               <input 
                 id="keywords" 
                 name="keywords" 
+                defaultValue={initialData.keywords}
                 required 
                 placeholder="promo, discount, price"
                 className="w-full rounded-md border bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-foreground transition-colors placeholder:text-muted-foreground/60" 
@@ -72,19 +92,19 @@ export default function NewAutomationPage() {
             <label className="text-[11px] font-semibold uppercase text-muted-foreground tracking-wider">Trigger Sources</label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <label className="flex flex-col items-start gap-4 p-4 rounded-lg border border-border bg-background hover:bg-muted/30 cursor-pointer transition-colors relative has-[:checked]:border-foreground has-[:checked]:ring-1 has-[:checked]:ring-foreground">
-                <input type="radio" name="type" value="DM" defaultChecked className="absolute top-4 right-4 accent-foreground" />
+                <input type="radio" name="type" value="DM" defaultChecked={initialData.triggerType === 'DM'} className="absolute top-4 right-4 accent-foreground" />
                 <div className="text-sm font-semibold text-foreground">DMs Only</div>
                 <p className="text-xs text-muted-foreground font-medium">Direct messages sent to your inbox.</p>
               </label>
               
               <label className="flex flex-col items-start gap-4 p-4 rounded-lg border border-border bg-background hover:bg-muted/30 cursor-pointer transition-colors relative has-[:checked]:border-foreground has-[:checked]:ring-1 has-[:checked]:ring-foreground">
-                 <input type="radio" name="type" value="COMMENT" className="absolute top-4 right-4 accent-foreground" />
+                 <input type="radio" name="type" value="COMMENT" defaultChecked={initialData.triggerType === 'COMMENT'} className="absolute top-4 right-4 accent-foreground" />
                  <div className="text-sm font-semibold text-foreground">Comments</div>
                  <p className="text-xs text-muted-foreground font-medium">Replies to your posts or reels.</p>
               </label>
 
               <label className="flex flex-col items-start gap-4 p-4 rounded-lg border border-border bg-background hover:bg-muted/30 cursor-pointer transition-colors relative has-[:checked]:border-foreground has-[:checked]:ring-1 has-[:checked]:ring-foreground">
-                 <input type="radio" name="type" value="ALL" className="absolute top-4 right-4 accent-foreground" />
+                 <input type="radio" name="type" value="ALL" defaultChecked={initialData.triggerType === 'ALL'} className="absolute top-4 right-4 accent-foreground" />
                  <div className="text-sm font-semibold text-foreground">Both</div>
                  <p className="text-xs text-muted-foreground font-medium">Highest reach across all engagement types.</p>
               </label>
@@ -118,6 +138,7 @@ export default function NewAutomationPage() {
                 <textarea 
                   id="customReply" 
                   name="customReply" 
+                  defaultValue={initialData.customReply}
                   required 
                   placeholder="Type the exact message to send when this keyword is triggered…"
                   className="w-full min-h-[100px] rounded-md border bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-foreground placeholder:text-muted-foreground/60 transition-colors" 
@@ -128,7 +149,7 @@ export default function NewAutomationPage() {
           </div>
 
           <div className="pt-6 flex gap-3 border-t border-border">
-            <Button type="submit" className="font-semibold px-6 shadow-sm">Deploy Automation</Button>
+            <Button type="submit" className="font-semibold px-6 shadow-sm">Save Changes</Button>
             <Link href="/dashboard/automations">
               <Button variant="outline" className="font-medium shadow-sm hover:bg-muted/50">Discard</Button>
             </Link>

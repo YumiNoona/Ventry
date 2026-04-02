@@ -22,47 +22,55 @@ export function Sidebar({ user }: { user: { name: string | null; email: string }
   const pathname = usePathname();
 
   return (
-    <div className="w-64 flex-shrink-0 border-r border-border bg-card/80 backdrop-blur-xl flex flex-col justify-between">
-      <div>
-        <div className="h-16 flex items-center px-6 border-b border-border">
-          <Link href="/dashboard" className="flex items-center gap-2.5 font-bold text-xl tracking-tight group">
-            <div className="size-7 rounded-lg bg-primary text-primary-foreground flex items-center justify-center text-xs font-black transition-transform duration-200 group-hover:scale-110 group-hover:rotate-3">V</div>
-            <span className="transition-colors duration-200 group-hover:text-primary">Ventry</span>
-          </Link>
-        </div>
-        <nav className="p-3 space-y-0.5">
-          {navItems.map((item: typeof navItems[number]) => {
-            const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`));
-            const isDashboardExact = item.href === "/dashboard" && pathname === "/dashboard";
-            const active = isActive || isDashboardExact;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`group relative flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
-                  active 
-                    ? "bg-primary text-primary-foreground shadow-sm shadow-primary/20" 
-                    : "text-muted-foreground hover:bg-muted/80 hover:text-foreground hover:translate-x-0.5"
-                }`}
-              >
-                <item.icon className={`h-4 w-4 transition-all duration-200 ${
-                  active 
-                    ? "text-primary-foreground" 
-                    : "text-muted-foreground group-hover:text-foreground group-hover:scale-110"
-                }`} />
-                {item.name}
-                {active && (
-                  <span className="absolute right-3 flex h-1.5 w-1.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-foreground/60 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-primary-foreground"></span>
-                  </span>
-                )}
-              </Link>
-            );
-          })}
-        </nav>
+    <div className="w-20 lg:w-64 flex-shrink-0 flex flex-col h-screen p-4 gap-4 transition-all duration-300 border-r border-border bg-background">
+      {/* Brand / Logo */}
+      <div className="flex items-center px-2 lg:px-4 h-14 shrink-0">
+        <Link href="/dashboard" className="flex items-center gap-3 font-bold text-xl tracking-tight group outline-none">
+          <div className="size-8 rounded-lg bg-foreground text-background flex items-center justify-center text-sm font-bold shadow-sm transition-transform duration-300 group-hover:scale-105">
+            V
+          </div>
+          <span className="hidden lg:block text-foreground transition-all duration-300 group-hover:tracking-tight">
+            Ventry
+          </span>
+        </Link>
       </div>
 
+      {/* Navigation */}
+      <nav className="flex-1 flex flex-col gap-1 px-2 py-4 lg:p-4 overflow-y-auto">
+        {navItems.map((item) => {
+          const isActive = pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`));
+          const isDashboardExact = item.href === "/dashboard" && pathname === "/dashboard";
+          const active = isActive || isDashboardExact;
+          
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`group flex items-center gap-3 p-2.5 rounded-lg transition-all duration-200 outline-none ${
+                active 
+                  ? "bg-accent text-accent-foreground font-medium" 
+                  : "text-muted-foreground hover:bg-accent/50 hover:text-foreground font-medium"
+              }`}
+            >
+              <div className={`shrink-0 transition-transform duration-200 ${active ? "scale-100" : "group-hover:scale-105 group-active:scale-95"}`}>
+                <item.icon className="h-5 w-5 lg:h-[18px] lg:w-[18px]" strokeWidth={active ? 2.5 : 2} />
+              </div>
+              <span className={`hidden lg:block text-sm transition-opacity duration-200 ${active ? "opacity-100" : "opacity-80 group-hover:opacity-100"}`}>
+                {item.name}
+              </span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Bottom Action / Upgrade */}
+      <div className="hidden lg:flex flex-col gap-2 p-4 rounded-xl border border-border bg-card transition-all hover:border-border/80 hover:shadow-sm">
+        <div className="flex items-center gap-2">
+          <Zap className="h-4 w-4 text-foreground" />
+          <p className="text-sm font-semibold text-foreground">Pro Plan</p>
+        </div>
+        <p className="text-xs text-muted-foreground leading-relaxed">Unlock advanced 3D triggers & analytics.</p>
+      </div>
     </div>
   );
 }

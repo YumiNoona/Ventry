@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { Button } from "@ventry/ui/components/ui/button";
-import { Zap, MessageSquare, Plus, SwitchCamera, ToggleRight, ToggleLeft } from "lucide-react";
+import { Zap, MessageSquare } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+
 interface AutomationWithTriggers {
   id: string;
   name: string;
@@ -15,38 +17,40 @@ interface AutomationWithTriggers {
 export function AutomationCard({ automation }: { automation: AutomationWithTriggers }) {
   const router = useRouter();
   const [isActive, setIsActive] = useState(automation.isActive);
-  const [loading, setLoading] = useState(false);
 
   const toggleAutomation = async () => {
-    setLoading(true);
+    // Optimistic UI: Apply the change immediately
+    const nextState = !isActive;
+    setIsActive(nextState);
+    
     try {
       const response = await fetch(`/api/automations/${automation.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: !isActive }),
+        body: JSON.stringify({ isActive: nextState }),
       });
-      if (response.ok) {
-        setIsActive(!isActive);
-        router.refresh();
+      if (!response.ok) {
+        throw new Error("Failed to update");
       }
+      // Re-fetch data in the background to sync server state
+      router.refresh();
     } catch (e) {
       console.error("Toggle failed:", e);
-    } finally {
-      setLoading(false);
+      // Revert optimistic update on failure
+      setIsActive(!nextState);
     }
   };
 
   return (
-    <div className="rounded-xl border bg-card p-6 shadow-sm hover:shadow-md transition-shadow">
+    <div className="rounded-xl border border-border bg-card p-6 shadow-sm hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <Zap className="h-4 w-4 text-primary" />
-          <h4 className="font-semibold text-lg">{automation.name}</h4>
+          <Zap className="h-4 w-4 text-foreground" />
+          <h4 className="font-semibold text-lg text-foreground">{automation.name}</h4>
         </div>
         <button 
           onClick={toggleAutomation} 
-          disabled={loading}
-          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 ${isActive ? "bg-primary" : "bg-muted"}`}
+          className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${isActive ? "bg-foreground" : "bg-muted"}`}
         >
           <span
             className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-background shadow ring-0 transition duration-200 ease-in-out ${isActive ? "translate-x-5" : "translate-x-0"}`}
@@ -63,15 +67,19 @@ export function AutomationCard({ automation }: { automation: AutomationWithTrigg
           ))}
         </div>
 
-        <div className="flex items-center justify-between pt-4 border-t border-border">
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <MessageSquare className="h-3 w-3" />
+        <div className="flex items-center justify-between pt-4 border-t border-border mt-4">
+          <div className="flex items-center gap-4 text-xs font-medium text-muted-foreground">
+            <div className="flex items-center gap-1.5">
+              <MessageSquare className="h-3.5 w-3.5" />
               <span>{automation.executions?.length || 0} hits</span>
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" className="h-8 text-xs underline">Edit Sequence</Button>
+            <Link href={`/dashboard/automations/${automation.id}`}>
+              <Button variant="ghost" size="sm" className="h-8 text-[13px] font-semibold underline hover:no-underline hover:bg-muted/50 text-foreground transition-colors">
+                Edit Sequence
+              </Button>
+            </Link>
           </div>
         </div>
       </div>

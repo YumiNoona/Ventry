@@ -1,8 +1,6 @@
 "use client";
 
 import { 
-  LineChart, 
-  Line, 
   XAxis, 
   YAxis, 
   CartesianGrid, 
@@ -14,9 +12,8 @@ import {
   Bar,
   Cell
 } from 'recharts';
-import { TrendingUp, Users, Zap, MessageSquare, ArrowUpRight } from "lucide-react";
+import { TrendingUp, Users, Zap, MessageSquare, ArrowUpRight, BarChart3, Activity } from "lucide-react";
 
-// Mock data for initial rendering until user has real volume
 const data = [
   { name: 'Mar 24', sent: 4, received: 12 },
   { name: 'Mar 25', sent: 7, received: 18 },
@@ -27,122 +24,111 @@ const data = [
   { name: 'Mar 30', sent: 45, received: 78 },
 ];
 
-const COLORS = ['#adfa1d', '#2563eb', '#8b5cf6', '#f59e0b'];
-
 export default function AnalyticsPage() {
   return (
-    <div className="space-y-8 animate-fade-in">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border bg-card p-6 shadow-sm">
-          <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-widest text-[10px] font-bold">Total Engagement</h3>
-            <MessageSquare className="h-4 w-4 text-muted-foreground opacity-30" />
+    <div className="max-w-[1400px] mx-auto space-y-10 animate-page-enter p-8 overflow-x-hidden">
+      {/* Metrics Row */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 stagger-children">
+        {[
+          { label: 'Total Engagement', val: '1,284', icon: MessageSquare, sub: '+12%', color: 'text-success' },
+          { label: 'AI Replies', val: '452', icon: Zap, sub: '35% rate', color: 'text-foreground' },
+          { label: 'Unique Accounts', val: '89', icon: Users, sub: 'Active now', color: 'text-foreground' },
+          { label: 'Time Saved', val: '14.2h', icon: Activity, sub: 'Est. month', color: 'text-foreground' },
+        ].map((m, i) => (
+          <div key={i} className="bento-card group">
+            <div className="flex items-center justify-between space-y-0 pb-3">
+              <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{m.label}</h3>
+              <m.icon className="h-4 w-4 text-muted-foreground/50 group-hover:text-foreground transition-colors" />
+            </div>
+            <div className="text-3xl font-bold tracking-tight">{m.val}</div>
+            <p className={`text-xs font-medium mt-2 ${m.sub.includes('+') ? m.color : 'text-muted-foreground'}`}>
+              {m.sub}
+            </p>
           </div>
-          <div className="text-2xl font-bold">1,284</div>
-          <p className="text-xs text-muted-foreground mt-1">
-            <span className="text-success font-semibold flex items-center gap-0.5">
-              <TrendingUp className="h-3 w-3" /> +12%
-            </span> from last month
-          </p>
-        </div>
-        <div className="rounded-xl border bg-card p-6 shadow-sm">
-          <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-widest text-[10px] font-bold">AI Replies</h3>
-            <Zap className="h-4 w-4 text-muted-foreground opacity-30" />
-          </div>
-          <div className="text-2xl font-bold">452</div>
-          <p className="text-xs text-muted-foreground mt-1">
-             35% automation rate
-          </p>
-        </div>
-        <div className="rounded-xl border bg-card p-6 shadow-sm">
-          <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-widest text-[10px] font-bold">Unique Accounts</h3>
-            <Users className="h-4 w-4 text-muted-foreground opacity-30" />
-          </div>
-          <div className="text-2xl font-bold">89</div>
-          <p className="text-xs text-muted-foreground mt-1">
-             Active listeners
-          </p>
-        </div>
-        <div className="rounded-xl border bg-card p-6 shadow-sm">
-          <div className="flex items-center justify-between space-y-0 pb-2">
-            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-widest text-[10px] font-bold">Time Saved</h3>
-            <ArrowUpRight className="h-4 w-4 text-muted-foreground opacity-30" />
-          </div>
-          <div className="text-2xl font-bold">14.2h</div>
-          <p className="text-xs text-muted-foreground mt-1">
-            Estimated this month
-          </p>
-        </div>
+        ))}
       </div>
 
-      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-7">
-        <div className="col-span-4 rounded-xl border bg-card p-6 shadow-sm">
-          <div className="mb-6 flex items-center justify-between">
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-7 stagger-children">
+        {/* Main Chart */}
+        <div className="lg:col-span-4 bento-card p-8 group overflow-hidden relative">
+          <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+             <BarChart3 className="size-32" />
+          </div>
+          
+          <div className="mb-10 flex items-center justify-between relative z-10">
              <div>
-              <h3 className="font-bold text-lg tracking-tight">Message Volume</h3>
-              <p className="text-sm text-muted-foreground">Daily inbound vs. AI replies.</p>
+              <h3 className="font-bold text-xl text-foreground tracking-tight">Engagement Velocity</h3>
+              <p className="text-sm font-medium text-muted-foreground mt-1">Growth trajectory of AI-handled conversations.</p>
              </div>
-             <div className="size-8 rounded-full bg-muted/50 flex items-center justify-center">
-                <BarChart className="h-4 w-4 opacity-50" />
+             <div className="size-10 rounded-lg bg-success/15 flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 text-success" />
              </div>
           </div>
-          <div className="h-[300px] w-full">
+          
+          <div className="h-[350px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={data}>
                 <defs>
                   <linearGradient id="colorSent" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#adfa1d" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#adfa1d" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="hsl(var(--foreground))" stopOpacity={0.8}/>
+                    <stop offset="95%" stopColor="hsl(var(--foreground))" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
+                <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="hsl(var(--border))" />
                 <XAxis 
                   dataKey="name" 
-                  stroke="#888888" 
-                  fontSize={10} 
+                  stroke="hsl(var(--muted-foreground))" 
+                  fontSize={12} 
                   tickLine={false} 
                   axisLine={false} 
-                  fontWeight="bold"
+                  fontWeight="500"
+                  dy={10}
                 />
                 <YAxis 
-                   stroke="#888888" 
-                   fontSize={10} 
+                   stroke="hsl(var(--muted-foreground))" 
+                   fontSize={12} 
                    tickLine={false} 
                    axisLine={false} 
-                   fontWeight="bold"
-                   tickFormatter={(value) => `${value}`}
+                   fontWeight="500"
+                   width={40}
                 />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }}
-                  itemStyle={{ fontSize: '12px' }}
-                  cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 1, strokeDasharray: '4 4' }}
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--background))', 
+                    border: '1px solid hsl(var(--border))', 
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
+                    padding: '8px 12px'
+                  }}
+                  itemStyle={{ fontSize: '12px', fontWeight: '500', color: 'hsl(var(--foreground))' }}
+                  cursor={{ stroke: 'hsl(var(--border))', strokeWidth: 1 }}
                 />
-                <Area type="monotone" dataKey="received" stroke="#888888" fillOpacity={0.05} fill="#888888" strokeWidth={2} />
-                <Area type="monotone" dataKey="sent" stroke="#adfa1d" fillOpacity={1} fill="url(#colorSent)" strokeWidth={3} />
+                <Area type="monotone" dataKey="received" stroke="hsl(var(--muted-foreground) / 0.2)" fillOpacity={0.05} fill="hsl(var(--muted-foreground))" strokeWidth={2} />
+                <Area type="monotone" dataKey="sent" stroke="hsl(var(--foreground))" fillOpacity={1} fill="url(#colorSent)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        <div className="col-span-3 rounded-xl border bg-card p-6 shadow-sm">
-           <div className="mb-6 flex items-center justify-between">
+        {/* Trigger Performance */}
+        <div className="lg:col-span-3 bento-card p-8 group">
+           <div className="mb-10 flex items-center justify-between">
              <div>
-              <h3 className="font-bold text-lg tracking-tight">Top Triggers</h3>
-              <p className="text-sm text-muted-foreground">Highest converting keyword groups.</p>
+              <h3 className="font-bold text-xl text-foreground tracking-tight">Conversion Triggers</h3>
+              <p className="text-sm font-medium text-muted-foreground mt-1">Highest performing keyword clusters.</p>
              </div>
-             <div className="size-8 rounded-full bg-muted/50 flex items-center justify-center">
-                <Zap className="h-4 w-4 opacity-50 text-primary" />
+             <div className="size-10 rounded-lg bg-accent flex items-center justify-center">
+                <Zap className="h-5 w-5 text-foreground" />
              </div>
           </div>
-          <div className="h-[300px] w-full">
+          
+          <div className="h-[350px] w-full mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={[
                 { name: 'PRICING', hits: 145 },
                 { name: 'DEMO', hits: 98 },
-                { name: 'DISCOUNT', hits: 76 },
-                { name: 'HELP', hits: 42 },
+                { name: 'SUPPORT', hits: 76 },
+                { name: 'JOIN', hits: 42 },
               ]} layout="vertical" barCategoryGap="30%">
                 <XAxis type="number" hide />
                 <YAxis 
@@ -150,17 +136,19 @@ export default function AnalyticsPage() {
                   type="category" 
                   axisLine={false} 
                   tickLine={false} 
-                  fontSize={10} 
-                  width={80} 
-                  fontWeight="900"
-                  tick={{ fill: 'hsl(var(--foreground))', opacity: 0.8 }}
+                  fontSize={11} 
+                  width={70} 
+                  fontWeight="600"
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
                 />
-                <Tooltip cursor={{ fill: 'transparent' }} />
-                <Bar dataKey="hits" radius={[0, 6, 6, 0]} barSize={24}>
-                   <Cell fill="#adfa1d" />
-                   <Cell fill="#2563eb" />
-                   <Cell fill="#8b5cf6" />
-                   <Cell fill="#f59e0b" />
+                <Tooltip 
+                  cursor={{ fill: 'hsl(var(--accent) / 0.5)' }}
+                  contentStyle={{ borderRadius: '8px', border: '1px solid hsl(var(--border))', backgroundColor: 'hsl(var(--background))' }}
+                />
+                <Bar dataKey="hits" radius={[0, 4, 4, 0]} barSize={24}>
+                   {[...Array(4)].map((_, index) => (
+                     <Cell key={`cell-${index}`} fill={`hsl(var(--foreground) / ${1 - index * 0.2})`} />
+                   ))}
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
