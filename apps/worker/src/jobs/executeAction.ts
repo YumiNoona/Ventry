@@ -60,7 +60,7 @@ export const startExecuteActionWorker = () => {
     // 4. Branch Output Mode (AI vs Static)
     let responseText = "";
 
-    if (payloadOpts.useAI) {
+    if (action.type === "AI_REPLY" || payloadOpts.useAI) {
       const historyItems = await prisma.message.findMany({
         where: { accountId, threadId: execution.message?.threadId! },
         orderBy: { createdAt: "desc" },
@@ -73,7 +73,7 @@ export const startExecuteActionWorker = () => {
       // e.g., await openai.chat.completions.create({...})
       responseText = await generateContent("reply", { text, historyItems });
     } else {
-      responseText = payloadOpts.text || "Hello from Ventry!";
+      responseText = payloadOpts.text || action.payload?.text || "Hello from Ventry!";
     }
 
     // 5. Fire off to Meta Graph API

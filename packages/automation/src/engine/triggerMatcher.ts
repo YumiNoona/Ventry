@@ -1,6 +1,6 @@
 import { prisma, TriggerType } from "@ventry/db";
 
-const extractWords = (text: string) => text.toLowerCase().match(/\b\w+\b/g) || [];
+const extractWords = (text: string) => text.toUpperCase().match(/\b\w+\b/g) || [];
 
 export const matchTriggers = async (accountId: string, content: string, eventType: string, mediaId?: string) => {
   const normalizedType: TriggerType = eventType === "messages" ? "DM" : "COMMENT";

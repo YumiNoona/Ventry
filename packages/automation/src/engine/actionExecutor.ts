@@ -4,7 +4,7 @@ import { generateContent } from "@ventry/ai";
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const executeAction = async (action: any, contextData: any) => {
-  if (action.type === "reply_comment" || action.type === "send_dm") {
+  if (action.type === "AI_REPLY" || action.type === "TEXT_REPLY" || action.type === "reply_comment" || action.type === "send_dm") {
     // 1. Fetch Account + User + Plan
     const account = await prisma.account.findUnique({
       where: { id: contextData.accountId },
