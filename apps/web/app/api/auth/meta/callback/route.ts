@@ -86,6 +86,22 @@ export async function GET(req: NextRequest) {
 
     console.log("[OAuth Callback] Instagram profile:", { igAccountId, igName });
 
+    // Step 3.5: Subscribe this Instagram account to our Meta App Webhooks!
+    // Without this, Meta will NOT forward DMs to our webhook endpoint for this user.
+    const subscribeResponse = await fetch(
+      `https://graph.instagram.com/v21.0/${igAccountId}/subscribed_apps?subscribed_fields=messages,messaging_postbacks&access_token=${longLivedToken}`,
+      { method: 'POST' }
+    );
+    
+    const subscribeData = await subscribeResponse.json();
+    if (!subscribeData.success) {
+      console.error("[OAuth Callback] Failed to subscribe app to page webhooks:", subscribeData);
+      // We log the error but still proceed so they aren't completely blocked, 
+      // but warn them if we can.
+    } else {
+      console.log(`[OAuth Callback] Successfully subscribed IG Account ${igAccountId} to Webhooks!`);
+    }
+
     // Step 4: Get the authenticated user from Supabase session
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
