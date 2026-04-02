@@ -116,10 +116,11 @@ export const executeAction = async (action: any, contextData: any) => {
             },
           });
 
-          if (contextData.automationId) {
+          if (contextData.automationId && contextData.triggerId) {
             await prisma.automationExecution.create({
               data: {
                 automationId: contextData.automationId,
+                triggerId: contextData.triggerId,
                 messageId: message.id,
               }
             });
